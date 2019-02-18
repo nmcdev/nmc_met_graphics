@@ -1,0 +1,9 @@
+figure.figsize: 4, 2.8
+figure.dpi: 120
+font.size: 10.0
+legend.fancybox: True
+legend.fontsize: x-small
+xtick.labelsize: small
+ytick.labelsize: small
+axes.labelsize: medium
+axes.titlesize: large

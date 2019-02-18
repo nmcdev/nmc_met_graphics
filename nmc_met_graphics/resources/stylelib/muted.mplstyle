@@ -1,0 +1,19 @@
+# Red, blue, green, purple, orange, brown, pink, grey, yellow, black
+axes.prop_cycle:  cycler('linestyle', ['-', '--', ':', '-.']) * cycler('color', ['E41A1C', '377EB8', '4DAF4A', '984EA3', 'FF7F00', 'A65628', 'F781BF', '999999', 'FFFF33', '000000'])
+lines.linewidth: 2.0
+figure.facecolor: white
+axes.edgecolor: black
+legend.framealpha: 0.8
+
+# from fivethirtyeight.mplstyle
+# see https://github.com/matplotlib/matplotlib/blob/master/lib/matplotlib/mpl-data/stylelib/fivethirtyeight.mplstyle, #2e7b6a5
+# Also see https://www.dataorigami.net/blogs/fivethirtyeight-mpl
+
+patch.edgecolor: f0f0f0
+patch.linewidth: 0.5
+legend.fancybox: true
+axes.labelsize: large
+axes.titlesize: x-large
+legend.fontsize: small
+figure.figsize: 8, 5
+savefig.dpi: 120
