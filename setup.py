@@ -42,7 +42,6 @@ setup(
 
     install_requires=['numpy>=1.12.1',
                       'matplotlib>=2.0.2',
-                      'basemap>=1.0.7',
                       'netCDF4>=1.3.0',
                       'pandas>=0.22.0',
                       'pyshp>=1.2.0',
