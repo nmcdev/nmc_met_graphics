@@ -35,7 +35,7 @@ def add_china_map_2basemap(mp, ax, name='province', facecolor='none',
 
     # get shape file and information
     shpfile = pkg_resources.resource_filename(
-        'nmc_met_graphics', "resources\\maps\\"+names[name])
+        'nmc_met_graphics', "resources/maps/"+names[name])
     _ = mp.readshapefile(shpfile, 'states', drawbounds=True)
 
     for info, shp in zip(mp.states_info, mp.states):
@@ -64,7 +64,7 @@ def add_china_map_2cartopy(ax, name='province', facecolor='none',
 
     # get shape filename
     shpfile = pkg_resources.resource_filename(
-        'nmc_met_graphics', "resources\\maps\\" + names[name] + ".shp")
+        'nmc_met_graphics', "resources/maps/" + names[name] + ".shp")
 
     # add map
     ax.add_geometries(

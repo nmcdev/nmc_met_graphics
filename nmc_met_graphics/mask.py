@@ -138,7 +138,7 @@ def grid_mask_china(lon, lat):
 
     # read china boundary from shape file
     shp = shapereader.Reader(pkg_resources.resource_filename(
-        'nmc_met_graphics', "resources\\maps\\bou1_4p"))
+        'nmc_met_graphics', "resources/maps/bou1_4p"))
 
     # convert to polygons
     geoms = shp.geometries()
@@ -172,7 +172,7 @@ def contour_shp_clip(originfig, ax, m=None, shpfile=None,
     # get shape file
     if shpfile is None:
         shpfile = pkg_resources.resource_filename(
-            'nmc_met_graphics', "resources\\maps\\country1.shp")
+            'nmc_met_graphics', "resources/maps/country1.shp")
 
     # get region name
     if region_name is None:
