@@ -11,6 +11,7 @@ import os
 import sys
 import re
 import glob
+import pathlib
 import pkg_resources
 import numpy as np
 import matplotlib as mpl
@@ -18,6 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm
 from matplotlib import colors
 from matplotlib.colors import ListedColormap, to_rgb, LinearSegmentedColormap
+from nmc_met_graphics.cmap.cpt import gmtColormap_openfile
 
 
 def make_cmap(incolors, position=None, rgb=False, hex=False):
@@ -193,6 +195,20 @@ def show_colormap(cmap):
     fig.subplots_adjust(hspace=0.1)
     ax[0].imshow(im, cmap=cmap)
     ax[1].imshow(im, cmap=grayify_cmap(cmap))
+    
+    
+def plot_colorMaps(cmap):
+    """
+    Plot color map.
+    
+    :param cmap: color map instance.
+    :return: None
+    """
+    print(cmap.name)
+    fig, ax = plt.subplots(figsize=(6,0.5))
+    col_map = plt.get_cmap(cmap)
+    mpl.colorbar.ColorbarBase(ax, cmap=col_map, orientation = 'horizontal')
+    plt.show()
 
 
 def ncl_cmaps(name):
@@ -241,6 +257,41 @@ def guide_cmaps(name):
 
     # construct color map
     return ListedColormap(rgb/255, name=name)
+
+
+def ndfd_cmaps(name):
+    """
+    Get ndfd color maps.
+    refer to https://github.com/eengl/ndfd-colors.
+
+    :param name: color name number, like "PoP12-Blend".
+    :return: matplotlib color map.
+    """
+
+    # color map file directory
+    cmap_file = pkg_resources.resource_filename(
+        "nmc_met_graphics", "resources/colormaps_ndfd/" + str(name) + '.cpt')
+    if not os.path.isfile(cmap_file):
+        return None
+
+    # read color data
+    rgb = gmtColormap_openfile(cmap_file, name)
+
+    # construct color map
+    return rgb
+
+
+def ndfd_cmaps_show():
+    """  
+    Show all ndfd color maps.
+    """
+    cmap_dir = pkg_resources.resource_filename(
+        "nmc_met_graphics", "resources/colormaps_ndfd/")
+    
+    for file in pathlib.Path(cmap_dir).glob("*.cpt"):
+        cptf = open(file, 'r')
+        color = gmtColormap_openfile(cptf, file.name)
+        plot_colorMaps(color)
 
 
 class MidpointNormalize(colors.Normalize):
