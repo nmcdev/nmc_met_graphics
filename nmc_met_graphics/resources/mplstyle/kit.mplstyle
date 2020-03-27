@@ -1,0 +1,56 @@
+### Control the fonts
+mathtext.fontset : stix
+font.family : sans-serif
+font.serif : Tahoma
+font.size : 16
+axes.titlesize : 22
+axes.titleweight : bold # bold title
+
+### Control the colors
+text.color:  		(0.1,0.1,0.1) # instead of black we use a more grey color
+axes.labelcolor :  	(0.1,0.1,0.1)
+axes.edgecolor :  	(0.1,0.1,0.1)
+xtick.color:   		(0.1,0.1,0.1)
+ytick.color:  		(0.1,0.1,0.1)
+
+
+### Control title and margins 
+axes.titlepad : 20  # move title up
+axes.xmargin: 0.0   # don't add space in x direction 
+axes.ymargin: 0.05 
+
+### Control spines
+axes.spines.top    : False # no bounding box right and top
+axes.spines.right  : False
+
+
+### Control default sizes and widths
+lines.linewidth : 4
+lines.markersize : 12
+
+
+### Control the color cycle. These are KIT Colors
+axes.prop_cycle    : cycler('color', [ (0.0, 0.5882352941176471, 0.5098039215686274),(0.0,0.0,0.0),(0.27450980392156865, 0.39215686274509803, 0.6666666666666666), (0.8745098039215686, 0.6078431372549019, 0.10588235294117647), (0.6392156862745098, 0.06274509803921569, 0.48627450980392156), (0.5490196078431373, 0.7137254901960784, 0.235294117647), (0.6352941176470588, 0.13333333333333333, 0.13725490196078433), (0.13725490196078433, 0.6313725490196078, 0.8784313725490196), (0.6549019607843137, 0.5098039215686274, 0.1803921568627451), (0.0,0.0,0.0)])
+
+
+### Control the figure dimension and resolution
+figure.figsize   : 10, 3.75
+figure.constrained_layout.use: True
+figure.dpi : 100
+savefig.dpi : 200
+
+
+### Control the underlying grid 
+axes.grid : True
+grid.color: .1
+grid.linestyle: -
+grid.alpha: .5
+grid.linewidth: 0.1
+
+
+### Control the legend box
+legend.fancybox : True
+legend.facecolor: white
+legend.loc : upper right
+legend.framealpha : 0.975
+legend.edgecolor : darkgray
