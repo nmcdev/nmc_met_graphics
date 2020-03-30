@@ -47,7 +47,8 @@ setup(
                       'pyshp>=1.2.0',
                       'cartopy>=0.15.1',
                       'Shapely>=1.6.0'],
-    python_requires='>=3'
+    python_requires='>=3',
+    zip_safe = False
 )
 
 # development mode (DOS command):
