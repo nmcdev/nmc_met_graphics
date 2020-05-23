@@ -18,6 +18,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as mpatheffects
 import matplotlib.ticker as mticker
+from scipy.ndimage.filters import minimum_filter, maximum_filter
 
 
 def add_gridlines(ax, draw_labels=True, linewidth=2, color='gray', alpha=0.5,
@@ -399,3 +400,75 @@ def add_titlebox(ax, text, x=0.05, y=0.9, alignment='left', fontsize=12.5):
         bbox=dict(facecolor='white'), fontsize=fontsize)
 
     return ax
+
+
+def add_mslp_label(ax, proj_ccrs, mslp, lat, lon):
+    """
+    Add mslp low and high label
+
+    Args:
+        ax (matplotlib.axes.Axes):  the `Axes` instance used for plotting.
+        proj_ccrs (cartopy projection): cartopy projection object.
+        mslp (np.array): numpy array.
+        lat (np.array): latitude
+        lon (np.array): longitdue
+    """
+
+    #Label MSLP extrema
+    def _extrema(mat, mode='wrap', window=50):
+        mn = minimum_filter(mat, size=window, mode=mode)
+        mx = maximum_filter(mat, size=window, mode=mode)
+        return np.nonzero(mat == mn), np.nonzero(mat == mx)
+    
+    #Determine an appropriate window given the lat/lon grid resolution
+    res = lat[1] - lat[0]
+    nwindow = int(9.5 / res)
+    mslp = np.ma.masked_invalid(mslp)
+    local_min, local_max = _extrema(mslp, mode='wrap', window=nwindow)
+    
+    #Determine axis boundaries
+    xmin, xmax, ymin, ymax = ax.get_extent()
+    lons2d, lats2d = np.meshgrid(lon, lat)
+    transformed = proj_ccrs.transform_points(proj_ccrs, lons2d, lats2d)
+    x = transformed[..., 0]
+    y = transformed[..., 1]
+    
+    #Get location of extrema on grid
+    xlows = x[local_min]; xhighs = x[local_max]
+    ylows = y[local_min]; yhighs = y[local_max]
+    lowvals = mslp[local_min]; highvals = mslp[local_max]
+    yoffset = 0.022*(ymax-ymin)
+    dmin = yoffset
+    
+    #Plot low pressures
+    xyplotted = []
+    for x,y,p in zip(xlows, ylows, lowvals):
+        if x < xmax-yoffset and x > xmin+yoffset and y < ymax-yoffset and y > ymin+yoffset:
+            dist = [np.sqrt((x-x0)**2+(y-y0)**2) for x0,y0 in xyplotted]
+            if not dist or min(dist) > dmin: #,fontweight='bold'
+                a = ax.text(x,y,'L',fontsize=28,
+                        ha='center',va='center',color='r',fontweight='normal')
+                b = ax.text(x,y-yoffset,repr(int(p)),fontsize=14,
+                        ha='center',va='top',color='r',fontweight='normal')
+                a.set_path_effects([mpatheffects.Stroke(linewidth=1.5, foreground='black'),
+                       mpatheffects.SimpleLineShadow(),mpatheffects.Normal()])
+                b.set_path_effects([mpatheffects.Stroke(linewidth=1.0, foreground='black'),
+                       mpatheffects.SimpleLineShadow(),mpatheffects.Normal()])
+                xyplotted.append((x,y))
+                
+    #Plot high pressures
+    xyplotted = []
+    for x,y,p in zip(xhighs, yhighs, highvals):
+        if x < xmax-yoffset and x > xmin+yoffset and y < ymax-yoffset and y > ymin+yoffset:
+            dist = [np.sqrt((x-x0)**2+(y-y0)**2) for x0,y0 in xyplotted]
+            if not dist or min(dist) > dmin:
+                a = ax.text(x,y,'H',fontsize=28,
+                        ha='center',va='center',color='b',fontweight='normal')
+                b = ax.text(x,y-yoffset,repr(int(p)),fontsize=14,
+                        ha='center',va='top',color='b',fontweight='normal')
+                a.set_path_effects([mpatheffects.Stroke(linewidth=1.5, foreground='black'),
+                       mpatheffects.SimpleLineShadow(),mpatheffects.Normal()])
+                b.set_path_effects([mpatheffects.Stroke(linewidth=1.0, foreground='black'),
+                       mpatheffects.SimpleLineShadow(),mpatheffects.Normal()])
+                xyplotted.append((x,y))
+
