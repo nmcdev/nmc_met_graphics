@@ -104,7 +104,7 @@ def get_mcoast(name='PROVINCE', **kwargs):
     if name.upper() == 'COAST':
         kwargs = check_kwargs(kwargs, 'map_coastline_colour', "grey")
         kwargs = check_kwargs(kwargs, 'map_label', "on")
-        kwargs = check_kwargs(kwargs, 'map_label_height', 0.5)
+        kwargs = check_kwargs(kwargs, 'map_label_height', 0.6)
         kwargs = check_kwargs(kwargs, 'map_label_right', 'off')
         kwargs = check_kwargs(kwargs, 'map_label_top', 'off')
         kwargs = check_kwargs(kwargs, 'map_grid', "on")
@@ -120,7 +120,7 @@ def get_mcoast(name='PROVINCE', **kwargs):
         kwargs = check_kwargs(kwargs, 'map_coastline_land_shade_colour', "cream")
         kwargs = check_kwargs(kwargs, 'map_coastline_sea_shade_colour', "white")
         kwargs = check_kwargs(kwargs, 'map_label', "on")
-        kwargs = check_kwargs(kwargs, 'map_label_height', 0.5)
+        kwargs = check_kwargs(kwargs, 'map_label_height', 0.6)
         kwargs = check_kwargs(kwargs, 'map_label_right', 'off')
         kwargs = check_kwargs(kwargs, 'map_label_top', 'off')
         kwargs = check_kwargs(kwargs, 'map_grid', "on")

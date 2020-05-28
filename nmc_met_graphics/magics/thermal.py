@@ -36,11 +36,22 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
     # put data into fields
     temp_field = util.minput_2d(temp, lon, lat, {'long_name': 'Temperature', 'units': 'degree'})
     if gh is not None:
-        gh_feild = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
+        gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
 
     #
     # set up visual parameters
     #
+
+    plots = []
+
+    # draw the figure
+    if outfile is not None:
+        output = magics.output(
+            output_formats= ['png'],
+            output_name_first_page_number= 'off',
+            output_width= out_png_width,
+            output_name= outfile)
+        plots.append(output)
 
     # Setting the coordinates of the geographical area
     if map_region is None:
@@ -52,23 +63,11 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
             name='CHINA_REGION_CYLINDRICAL',
             map_region=map_region,
             subpage_frame_thickness = 5)
+    plots.append(china_map)
 
     # Background Coaslines
     coastlines = map_set.get_mcoast(name='COAST_FILL')
-    china_coastlines = map_set.get_mcoast(name='PROVINCE')
-
-    # Define the simple contouring for gh
-    gh_contour = magics.mcont(
-        legend= 'off', 
-        contour_level_selection_type= 'interval',
-        contour_interval= 20.,
-        contour_reference_level= 5880.,
-        contour_line_colour= 'black',
-        contour_line_thickness= 1.5,
-        contour_label= 'on',
-        contour_label_height= 0.5,
-        contour_highlight_colour= 'black',
-        contour_highlight_thickness= 3)
+    plots.append(coastlines)
 
     # Define the shading for teperature
     temp_contour = magics.mcont(
@@ -84,20 +83,50 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
         contour_interval= 3.,
         contour_shade_colour_method= "palette",
         contour_shade_palette_name= "eccharts_rainbow_purple_magenta_31")
+    plots.extend([temp_field, temp_contour])
+
+    temp_contour_zero = magics.mcont(
+        contour_level_selection_type = "level_list",
+        contour_level_list = [0.00],
+        contour_line_colour = "red",
+        contour_line_thickness = 4,
+        contour_highlight = "off",
+        contour_label = "off",
+        contour_min_level = -1.00,
+        contour_max_level = 1.00,
+        legend = "off")
+    plots.extend([temp_field, temp_contour_zero])
+
+    # Define the simple contouring for gh
+    if gh is not None:
+        gh_contour = magics.mcont(
+            legend= 'off', 
+            contour_level_selection_type= 'interval',
+            contour_interval= 20.,
+            contour_reference_level= 5880.,
+            contour_line_colour= 'black',
+            contour_line_thickness= 2,
+            contour_label= 'on',
+            contour_label_height= 0.5,
+            contour_highlight_colour= 'black',
+            contour_highlight_thickness= 4)
+        plots.extend([gh_field, gh_contour])
 
     # Add a legend
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
         legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'right',
+        legend_automatic_position= 'top',
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
         legend_display_type= 'continuous',
         legend_title = "on",
         legend_title_text= "Temperature",
-        legend_text_font_size = "0.5")
+        legend_title_font_size= 0.6,
+        legend_text_font_size = 0.5)
+    plots.append(legend)
 
     # Add the title
     text_lines = []
@@ -113,29 +142,11 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
         text_font_size = 0.6,
         text_mode = "title",
         text_colour = 'charcoal')
+    plots.append(title)
 
-    # draw the figure
-    if outfile is not None:
-        output = magics.output(
-            output_formats= ['png'],
-            output_name_first_page_number= 'off',
-            output_width= out_png_width,
-            output_name= outfile)
+    # Add china province
+    china_coastlines = map_set.get_mcoast(name='PROVINCE')
+    plots.append(china_coastlines)
 
-        if gh is not None:
-            magics.plot(
-                output, china_map, coastlines, temp_field, temp_contour,
-                gh_feild, gh_contour, legend, title, china_coastlines)
-        else:
-            magics.plot(
-                output, china_map, coastlines,  temp_field, temp_contour,
-                legend, title, china_coastlines)
-    else:
-        if gh is not None:
-            return magics.plot(
-                china_map, coastlines, temp_field, temp_contour,
-                gh_feild, gh_contour, legend, title, china_coastlines)
-        else:
-            return magics.plot(
-                china_map, coastlines, temp_field, temp_contour,
-                legend, title, china_coastlines)
+    # final plot
+    return magics.plot(*plots)

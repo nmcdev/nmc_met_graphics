@@ -39,6 +39,17 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
     # set up visual parameters
     #
 
+    plots = []
+
+    # draw the figure
+    if outfile is not None:
+        output = magics.output(
+            output_formats= ['png'],
+            output_name_first_page_number= 'off',
+            output_width= out_png_width,
+            output_name= outfile)
+        plots.append(output)
+
     # Setting the coordinates of the geographical area
     if map_region is None:
         china_map = map_set.get_mmap(
@@ -49,10 +60,11 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
             name='CHINA_REGION_CYLINDRICAL',
             map_region=map_region,
             subpage_frame_thickness = 5)
+    plots.append(china_map)
 
     # Background Coaslines
     coastlines = map_set.get_mcoast(name='COAST_FILL')
-    china_coastlines = map_set.get_mcoast(name='PROVINCE')
+    plots.append(coastlines)
 
     # Define the shading for teperature
     pres_contour = magics.mcont(
@@ -67,13 +79,14 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
         contour_shade_colour_method = "gradients",
         contour_gradients_colour_list = ['#440300','#e7d799','#dde2a4', '#145360', '#1450b2', '#ddecf3', '#d2e2e9', '#a33ab2'],
         contour_gradients_step_list = [11, 1, 11, 1, 11, 1, 11])
+    plots.extend([pres_field, pres_contour])
 
     # Add a legend
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
         legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'right',
+        legend_automatic_position= 'top',
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
@@ -81,7 +94,9 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
         legend_label_frequency= 2,
         legend_title = "on",
         legend_title_text= "Pressure",
-        legend_text_font_size = "0.5")
+        legend_title_font_size= 0.6,
+        legend_text_font_size = 0.5)
+    plots.append(legend)
 
     # Add the title
     text_lines = []
@@ -97,19 +112,11 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
         text_font_size = 0.6,
         text_mode = "title",
         text_colour = 'charcoal')
+    plots.append(title)
 
-    # draw the figure
-    if outfile is not None:
-        output = magics.output(
-            output_formats= ['png'],
-            output_name_first_page_number= 'off',
-            output_width= out_png_width,
-            output_name= outfile)
+    # Add china province
+    china_coastlines = map_set.get_mcoast(name='PROVINCE')
+    plots.append(china_coastlines)
 
-        magics.plot(
-            output, china_map, coastlines, pres_field, pres_contour,
-            legend, title, china_coastlines)
-    else:
-        return magics.plot(
-            china_map, coastlines, pres_field, pres_contour,
-            legend, title, china_coastlines)
+    # final plot
+    return magics.plot(*plots)
