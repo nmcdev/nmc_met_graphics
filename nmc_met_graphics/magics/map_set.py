@@ -21,6 +21,7 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
     
     Args:
         name (str, optional): map region name. Defaults to 'CHINA_LAND_CYLINDRICAL'.
+            if 'CHINA_REGION_CYLINDRICAL', set map_region=[lonmin, lonmax, latmin, latmax]
 
     Return:
         map background project object.
@@ -31,8 +32,8 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
     kwargs = check_kwargs(kwargs, 'page_id_line', 'off')
 
     if name.upper() == 'CHINA_CYLINDRICAL':                                                  # 中国陆地和海洋范围
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 24.0)
-        kwargs = check_kwargs(kwargs, 'subpage_y_length', 17.5)
+        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
+        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
         kwargs = check_kwargs(kwargs, 'subpage_lower_left_longitude', 70.0)
         kwargs = check_kwargs(kwargs, 'subpage_lower_left_latitude', 8.0)
         kwargs = check_kwargs(kwargs, 'subpage_upper_right_longitude', 140.0)
@@ -41,8 +42,8 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
             subpage_map_projection="cylindrical",
             **kwargs)
     elif name.upper() == 'CHINA_LAND_CYLINDRICAL':
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 24.0)
-        kwargs = check_kwargs(kwargs, 'subpage_y_length', 17.5)
+        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
+        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
         kwargs = check_kwargs(kwargs, 'subpage_lower_left_longitude', 73.0)
         kwargs = check_kwargs(kwargs, 'subpage_lower_left_latitude', 16.0)
         kwargs = check_kwargs(kwargs, 'subpage_upper_right_longitude', 136.0)
@@ -51,12 +52,23 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
             subpage_map_projection="cylindrical",
             **kwargs)
     elif name.upper() == 'CHINA_REGION_CYLINDRICAL':
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 24.0)
-        kwargs = check_kwargs(kwargs, 'subpage_y_length', 17.5)
-        
+        if 'map_region' in kwargs.keys():
+            map_region = kwargs['map_region']
+            del kwargs['map_region']
+        else:
+            map_region = [70, 140, 8, 60]
+        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
+        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
+        kwargs['subpage_lower_left_longitude'] = map_region[0]
+        kwargs['subpage_upper_right_longitude'] = map_region[1]
+        kwargs['subpage_lower_left_latitude'] = map_region[2]
+        kwargs['subpage_upper_right_latitude'] = map_region[3]
+        project = magics.mmap(
+            subpage_map_projection="cylindrical",
+            **kwargs)
     elif name.upper() == "CHINA_POLAR_STEREOGRAPHIC":
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 24.0)
-        kwargs = check_kwargs(kwargs, 'subpage_y_length', 17.5)
+        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
+        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
         kwargs = check_kwargs(kwargs, 'subpage_map_area_definition_polar', 'center')
         kwargs = check_kwargs(kwargs, 'subpage_map_vertical_longitude', 105)
         kwargs = check_kwargs(kwargs, 'subpage_map_centre_latitude', 35)
@@ -93,6 +105,8 @@ def get_mcoast(name='PROVINCE', **kwargs):
         kwargs = check_kwargs(kwargs, 'map_coastline_colour', "grey")
         kwargs = check_kwargs(kwargs, 'map_label', "on")
         kwargs = check_kwargs(kwargs, 'map_label_height', 0.5)
+        kwargs = check_kwargs(kwargs, 'map_label_right', 'off')
+        kwargs = check_kwargs(kwargs, 'map_label_top', 'off')
         kwargs = check_kwargs(kwargs, 'map_grid', "on")
         kwargs = check_kwargs(kwargs, 'map_grid_thickness', 0.2)
         kwargs = check_kwargs(kwargs, 'map_grid_line_style', "dot")
@@ -107,6 +121,8 @@ def get_mcoast(name='PROVINCE', **kwargs):
         kwargs = check_kwargs(kwargs, 'map_coastline_sea_shade_colour', "white")
         kwargs = check_kwargs(kwargs, 'map_label', "on")
         kwargs = check_kwargs(kwargs, 'map_label_height', 0.5)
+        kwargs = check_kwargs(kwargs, 'map_label_right', 'off')
+        kwargs = check_kwargs(kwargs, 'map_label_top', 'off')
         kwargs = check_kwargs(kwargs, 'map_grid', "on")
         kwargs = check_kwargs(kwargs, 'map_grid_thickness', 0.2)
         kwargs = check_kwargs(kwargs, 'map_grid_line_style', "dot")
