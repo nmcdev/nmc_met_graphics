@@ -45,7 +45,8 @@ def draw_wind_upper(uwind, vwind, lon, lat, gh=None, skip_vector=None,
 
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
-    wspeed_field = util.minput_2d(np.sqrt(uwind*uwind + vwind*vwind), lon, lat, {'long_name': 'Wind Speed', 'units': 'm/s'})
+    wspeed = np.sqrt(uwind*uwind + vwind*vwind)
+    wspeed_field = util.minput_2d(wspeed, lon, lat, {'long_name': 'Wind Speed', 'units': 'm/s'})
     if gh is not None:
         gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
 
@@ -81,23 +82,24 @@ def draw_wind_upper(uwind, vwind, lon, lat, gh=None, skip_vector=None,
     plots.append(coastlines)
 
     # Define the shading for the wind speed
-    wspeed_contour = magics.mcont(
-        legend= 'on',
-        contour_level_selection_type= 'level_list', 
-        contour_level_list= [30., 40., 50., 60., 70., 80., 90., 100.], 
-        contour_shade= 'on', 
-        contour_shade_max_level_colour= 'evergreen', 
-        contour_shade_min_level_colour= 'yellow',
-        contour_shade_method= 'area_fill', 
-        contour_reference_level= 0., 
-        contour_highlight= 'off', 
-        contour_hilo= 'hi', 
-        contour_hilo_format= '(F3.0)', 
-        contour_hilo_height= 0.6, 
-        contour_hilo_type= 'number', 
-        contour_hilo_window_size=10,
-        contour_label= 'off')
-    plots.extend([wspeed_field, wspeed_contour])
+    if wspeed.max() > 30.:
+        wspeed_contour = magics.mcont(
+            legend= 'on',
+            contour_level_selection_type= 'level_list', 
+            contour_level_list= [30., 40., 50., 60., 70., 80., 90., 100.], 
+            contour_shade= 'on', 
+            contour_shade_max_level_colour= 'evergreen', 
+            contour_shade_min_level_colour= 'yellow',
+            contour_shade_method= 'area_fill', 
+            contour_reference_level= 0., 
+            contour_highlight= 'off', 
+            contour_hilo= 'hi', 
+            contour_hilo_format= '(F3.0)', 
+            contour_hilo_height= 0.6, 
+            contour_hilo_type= 'number', 
+            contour_hilo_window_size=10,
+            contour_label= 'off')
+        plots.extend([wspeed_field, wspeed_contour])
 
     # Define the wind vector
     wind_vector = magics.mwind(
@@ -215,44 +217,47 @@ def draw_height_temp(gh, temp, lon, lat, map_region=None,
     coastlines = map_set.get_mcoast(name='COAST_FILL')
     plots.append(coastlines)
 
-    # Define the simple contouring for gh
-    temp_contour1 = magics.mcont(
-        legend= 'off', 
-        contour_level_selection_type= 'interval',
-        contour_interval= 2.0,
-        contour_reference_level= 0.,
-        contour_line_colour= 'red',
-        contour_line_thickness= 2,
-        contour_line_style = "dash",
-        contour_label= 'on',
-        contour_label_height= 0.5,
-        contour_max_level= -2.0,
-        contour_highlight = 'off')
-    plots.extend([temp_field, temp_contour1])
+    # Define the simple contouring for temperature
+    if temp.min() < -2.0:
+        temp_contour1 = magics.mcont(
+            legend= 'off', 
+            contour_level_selection_type= 'interval',
+            contour_interval= 2.0,
+            contour_reference_level= 0.,
+            contour_line_colour= 'red',
+            contour_line_thickness= 2,
+            contour_line_style = "dash",
+            contour_label= 'on',
+            contour_label_height= 0.5,
+            contour_max_level= -2.0,
+            contour_highlight = 'off')
+        plots.extend([temp_field, temp_contour1])
 
-    temp_contour2 = magics.mcont(
-        legend= 'off', 
-        contour_level_selection_type= 'level_list',
-        contour_level_list = [0.00],
-        contour_line_colour= 'red',
-        contour_line_thickness= 4,
-        contour_label= 'on',
-        contour_label_height= 0.5,
-        contour_highlight = 'off')
-    plots.extend([temp_field, temp_contour2])
+    if temp.min() < 0.0 and temp.max() > 0.0:
+        temp_contour2 = magics.mcont(
+            legend= 'off', 
+            contour_level_selection_type= 'level_list',
+            contour_level_list = [0.00],
+            contour_line_colour= 'red',
+            contour_line_thickness= 4,
+            contour_label= 'on',
+            contour_label_height= 0.5,
+            contour_highlight = 'off')
+        plots.extend([temp_field, temp_contour2])
 
-    temp_contour3 = magics.mcont(
-        legend= 'off', 
-        contour_level_selection_type= 'interval',
-        contour_interval= 2.0,
-        contour_reference_level= 0.,
-        contour_line_colour= 'red',
-        contour_line_thickness= 2,
-        contour_label= 'on',
-        contour_label_height= 0.5,
-        contour_min_level=2.0,
-        contour_highlight = 'off')
-    plots.extend([temp_field, temp_contour3])
+    if temp.max() > 2.0:
+        temp_contour3 = magics.mcont(
+            legend= 'off', 
+            contour_level_selection_type= 'interval',
+            contour_interval= 2.0,
+            contour_reference_level= 0.,
+            contour_line_colour= 'red',
+            contour_line_thickness= 2,
+            contour_label= 'on',
+            contour_label_height= 0.5,
+            contour_min_level=2.0,
+            contour_highlight = 'off')
+        plots.extend([temp_field, temp_contour3])
 
     # Define the simple contouring for gh
     gh_contour = magics.mcont(
