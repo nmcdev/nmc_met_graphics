@@ -19,6 +19,7 @@ import shapefile
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 from cartopy.io import shapereader
+from cartopy.mpl.patch import geos_to_path
 from shapely.geometry import Point, Polygon
 from shapely.ops import cascaded_union
 
@@ -138,7 +139,7 @@ def grid_mask_china(lon, lat):
 
     # read china boundary from shape file
     shp = shapereader.Reader(pkg_resources.resource_filename(
-        'nmc_met_graphics', "resources/maps/bou1_4p"))
+        'nmc_met_graphics', "resources/maps/bou1_4p.shp"))
 
     # convert to polygons
     geoms = shp.geometries()
@@ -211,3 +212,50 @@ def contour_shp_clip(originfig, ax, m=None, shpfile=None,
         contour.set_clip_path(clip)
 
     return clip
+
+
+def crsmask(ax, conf, crs, shpfile=None, region='China', pathkw=None):
+    """
+    在cartopy中, 对选定的区域进行白化
+    refer to https://cloud.tencent.com/developer/article/1618341
+
+    Args:
+        shpfile (string): 用于白化区域的shapefile文件名.
+        region (string): shpfile中包含的区域名.
+        ax (GeoAxes instance): cartopy的坐标轴实例
+        crs (cartopy.crs): cartopy坐标投影
+        conf (matplotlib): matplotlib的contour或contourf绘图返回值
+        pathkw (dict, optional): PathPatch关键字参数. Defaults to None.
+
+    Return:
+        clipping path, matplotlib.patches.PathPatch
+    """
+
+    # get shape file
+    if shpfile is None:
+        shpfile = pkg_resources.resource_filename(
+            'nmc_met_graphics', "resources/maps/country1.shp")
+    
+    # retrive region geometry
+    reader = shapereader.Reader(shpfile)
+    countries = reader.records()
+    try:
+        multipoly, = [country.geometry for country in countries
+                        if country.attributes['name'] == region]
+    except KeyError:
+        multipoly, = [country.geometry for country in countries
+                        if country.attributes['CNTRY_NAME'] == region]
+                        
+    main_geom = sorted(multipoly.geoms, key=lambda geom: geom.area)[-1]
+
+    path, = geos_to_path(main_geom)
+
+    plate_carre_data_transform = crs._as_mpl_transform(ax)
+
+    for collection in conf.collections:
+        collection.set_clip_path(path, plate_carre_data_transform)
+    
+    # Draw the path of interest.
+    path = PathPatch(path, transform = crs, **pathkw)
+    
+    return path

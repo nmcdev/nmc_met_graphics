@@ -7,13 +7,109 @@
 Draw rain analysis map.
 """
 
+import pkg_resources
 import numpy as np
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+from matplotlib.font_manager import FontProperties
+from matplotlib.transforms import offset_copy
 import cartopy.crs as ccrs
+import cartopy.io.img_tiles as cimg
 from nmc_met_graphics.cmap.ctables import cm_precipitation_nws
 from nmc_met_graphics.plot.china_map import add_china_map_2cartopy
 from nmc_met_graphics.plot.util import add_gridlines
+
+
+def draw_total_precipitation(prep, map_extent=(107., 112, 23.2, 26.5),
+                             back_image='terrain-background', back_image_zoom=12, title="降水量实况图",
+                             draw_station=True, station_info='cities', station_size=22, just_contourf=False):
+    """
+
+    Args:
+        ax ([type]): [description]
+        prep ([type]): [description]
+        map_extent (tuple, optional): [description]. Defaults to (107., 112, 23.2, 26.5).
+        back_image_zoom (int, optional): [description]. Defaults to 12.
+        draw_station (bool, optional): [description]. Defaults to True.
+        station_size (int, optional): [description]. Defaults to 22.
+        title (str, optional): [description]. Defaults to "降水量实况图".
+    
+    Example:
+
+    """
+
+    # set figure size
+    fig = plt.figure(figsize=(16, 14.5))
+
+    # set map projection
+    datacrs = ccrs.PlateCarree()
+    mapcrs = ccrs.LambertConformal(
+        central_longitude=np.mean(map_extent[0:1]), central_latitude=np.mean(map_extent[2:3]),
+        standard_parallels=(30, 60))
+    ax = plt.axes((0.1, 0.08, 0.85, 0.92), projection=mapcrs)
+    ax.set_extent(map_extent, crs=datacrs)
+
+    # add map background
+    add_china_map_2cartopy(ax, name='province', edgecolor='k', lw=1)
+    add_china_map_2cartopy(ax, name='river', edgecolor='cyan', lw=1)
+    if back_image == 'terrain-background':
+        stamen_terrain = cimg.Stamen('terrain-background')
+        ax.add_image(stamen_terrain, 9)
+
+    # set colors and levels
+    clevs = [50, 100, 200, 300, 400, 500, 600]
+    colors = ['#6ab4f1', '#0001f6', '#f405ee', '#ffa900', '#fc6408', '#e80000', '#9a0001']
+    linewidths = [1, 1, 2, 2, 3, 4, 4]
+    cmap, norm = mpl.colors.from_levels_and_colors(clevs, colors, extend='max')
+
+    # draw precipitation contour map
+    x, y = np.meshgrid(prep['lon'], prep['lat'])
+    if just_contourf:
+        _ = ax.contourf(
+            x, y, np.squeeze(prep['data']), clevs, norm=norm,
+            cmap=cmap, transform=datacrs, extend='max', alpha=0.5)
+    else:
+        _ = ax.contourf(
+            x, y, np.squeeze(prep['data']), clevs, norm=norm,
+            cmap=cmap, transform=datacrs, extend='max', alpha=0.1)
+        con2 = ax.contour(
+            x, y, np.squeeze(prep['data']), clevs, norm=norm,
+            cmap=cmap, transform=datacrs, linewidths=linewidths)
+        plt.setp(con2.collections, path_effects=[
+            path_effects.SimpleLineShadow(), path_effects.Normal()])
+
+    # add title and legend
+    font = FontProperties(family='Microsoft YaHei', size=32)
+    ax.set_title('降水量实况图(累计降水: 6月02日—6月06日)', loc='center', fontproperties=font)
+    font = FontProperties(family='Microsoft YaHei', size=16)
+    plt.legend([mpatches.Patch(color=b) for b in colors],[
+        '50~100 毫米', '100~200 毫米', '200-300 毫米', '300~400 毫米', '400~500 毫米', '500~600 毫米', '>=600毫米'],
+        prop=font)
+
+    # add city information
+    if draw_station:
+        if station_info == 'cities':
+            cities = pd.read_csv(pkg_resources.resource_filename(
+                'nmc_met_graphics', "resources/stations/cma_city_station_info.dat"),  delimiter=r"\s+")
+        else:
+            cities = pd.read_csv(pkg_resources.resource_filename(
+                'nmc_met_graphics', "resources/stations/provincial_capital.csv"))
+        font = FontProperties(family='SimHei', size=22, weight='bold')
+        geodetic_transform = ccrs.Geodetic()._as_mpl_transform(ax)
+        for _, row in cities.iterrows():
+            text_transform = offset_copy(geodetic_transform, units='dots', x=-5)
+            ax.plot(row['lon'], row['lat'], marker='o', color='white', markersize=8,
+                    alpha=0.7, transform=datacrs)
+            ax.text(row['lon'], row['lat'], row['city_name'], clip_on=True,
+                    verticalalignment='center', horizontalalignment='right',
+                    transform=text_transform, fontproperties=font, color='white',
+                    path_effects=[
+                        path_effects.Stroke(linewidth=1, foreground='black'),path_effects.Normal()])
+    
+    return fig
 
 
 def draw_precipitation_nws(ax, prep, map_extent=(73, 136, 17, 54),
