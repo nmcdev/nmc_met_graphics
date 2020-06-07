@@ -24,21 +24,37 @@ from nmc_met_graphics.plot.util import add_gridlines
 
 
 def draw_total_precipitation(prep, map_extent=(107., 112, 23.2, 26.5),
-                             back_image='terrain-background', back_image_zoom=12, title="降水量实况图",
+                             back_image='terrain-background', back_image_zoom=8, title="降水量实况图",
                              draw_station=True, station_info='cities', station_size=22, just_contourf=False):
     """
+    该程序用于显示多日的累积降水量分布特征, 2020/6/7按业务要求制作.
 
     Args:
-        ax ([type]): [description]
-        prep ([type]): [description]
-        map_extent (tuple, optional): [description]. Defaults to (107., 112, 23.2, 26.5).
-        back_image_zoom (int, optional): [description]. Defaults to 12.
-        draw_station (bool, optional): [description]. Defaults to True.
-        station_size (int, optional): [description]. Defaults to 22.
-        title (str, optional): [description]. Defaults to "降水量实况图".
+        ax (matplotlib.axes.Axes): the `Axes` instance used for plotting.
+        prep (dictionary): precipitation, dictionary: {'lon': 1D array, 'lat': 1D array, 'data': 2D array}
+        map_extent (tuple, optional): (lonmin, lonmax, latmin, latmax),. Defaults to (107., 112, 23.2, 26.5).
+        back_image (str, opional): the background image name. Default is stamen 'terrain-background', else is
+                                      arcgis map server 'World_Physical_Map' (max zoom level is 8)
+        back_image_zoom (int, optional): the zoom level for background image. Defaults to 8.
+        draw_station (bool, optional): draw station name. Defaults to True.
+        station_info (str, optional): station information, 'cities' is 260 city names, or province captial shows.
+        station_size (int, optional): station font size. Defaults to 22.
+        title (str, optional): title string. Defaults to "降水量实况图".
     
     Example:
+        import pandas as pd
+        from nmc_met_graphics.plot.precipitation import draw_total_precipitation
+        from nmc_met_io.retrieve_micaps_server import get_model_grids
 
+        # read data
+        times = pd.date_range(start = pd.to_datetime('2020-06-02 08:00'), end =  pd.to_datetime('2020-06-07 08:00'), freq='1H')
+        dataset = get_model_grids("CLDAS/RAIN01_TRI_DATA_SOURCE", times.strftime("%y%m%d%H.000"))
+        data = dataset.sum(dim="time")
+        data['data'].values[data['data'].values > 2400.0] = np.nan
+        prep = {'lon': data['lon'].values, 'lat': data['lat'].values, 'data': data['data'].values}
+
+        # draw the figure
+        draw_total_precipitation(prep);
     """
 
     # set figure size
@@ -57,7 +73,10 @@ def draw_total_precipitation(prep, map_extent=(107., 112, 23.2, 26.5),
     add_china_map_2cartopy(ax, name='river', edgecolor='cyan', lw=1)
     if back_image == 'terrain-background':
         stamen_terrain = cimg.Stamen('terrain-background')
-        ax.add_image(stamen_terrain, 9)
+        ax.add_image(stamen_terrain, back_image_zoom)
+    else:
+        image = cimg.GoogleTiles(url="https://server.arcgisonline.com/arcgis/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}.jpg")
+        ax.add_image(image, back_image_zoom)
 
     # set colors and levels
     clevs = [50, 100, 200, 300, 400, 500, 600]
@@ -78,6 +97,7 @@ def draw_total_precipitation(prep, map_extent=(107., 112, 23.2, 26.5),
         con2 = ax.contour(
             x, y, np.squeeze(prep['data']), clevs, norm=norm,
             cmap=cmap, transform=datacrs, linewidths=linewidths)
+        # add path effects
         plt.setp(con2.collections, path_effects=[
             path_effects.SimpleLineShadow(), path_effects.Normal()])
 
