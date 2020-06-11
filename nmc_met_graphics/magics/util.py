@@ -8,6 +8,7 @@
 """
 
 import sys
+import math
 import numpy as np
 
 try:
@@ -16,6 +17,21 @@ except ImportError:
     print("""Magics not installed. Please refer to 
       https://anaconda.org/conda-forge/magics""")
     sys.exit(1)
+
+
+def get_skip_vector(lon, lat, map_region):
+    """
+    Calculate default skip vector for magics vector map.
+    """
+    if map_region is not None:
+        lon1 = lon[ (lon >= map_region[0]) & (lon <= map_region[1])]
+        lat1 = lat[ (lat >= map_region[2]) & (lat <= map_region[3])]
+    else:
+        lon1 = lon
+        lat1 = lat
+    skip_vector = max(math.ceil(len(lon1)/60.0), math.ceil(len(lat1)/30.0))
+    
+    return skip_vector
 
 
 def minput_2d(data, lon, lat, metadata):
@@ -73,6 +89,15 @@ def minput_2d_vector(udata, vdata, lon, lat, skip=1, metadata=None):
     vwind_field = vwind_field[::skip, ::skip].flatten()
     lat = lat[::skip, ::skip].flatten()
     lon = lon[::skip, ::skip].flatten()
+
+    # remove nan values
+    index = (~np.isnan(uwind_field)) & (~np.isnan(vwind_field))
+    uwind_field = uwind_field[index]
+    vwind_field = vwind_field[index]
+    if uwind_field.size == 0:
+        return None
+    lat = lat[index]
+    lon = lon[index]
 
     # check meta information
     if metadata is None:

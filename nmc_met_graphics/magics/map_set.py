@@ -13,6 +13,34 @@ import Magics.macro as magics
 from nmc_met_graphics.util import check_kwargs
 
 
+def get_page_setup(kwargs, map_region=None):
+    """
+    设置Magics的默认页面大小和绘图范围大小.
+    """
+
+    if map_region is not None:
+        super_page_x_length = 29.7
+        page_ratio = (map_region[3]-map_region[2])*1.0/(map_region[1]-map_region[0])
+        # make sure the page will show all figure contents
+        kwargs = check_kwargs(kwargs, 'super_page_x_length', super_page_x_length)
+        kwargs = check_kwargs(kwargs, 'super_page_y_length', super_page_x_length * page_ratio)
+        # Set subpage_x_length and subpage_y_length, the small one is working
+        subpage_x_length = 25.0
+        kwargs = check_kwargs(kwargs, 'subpage_x_length', subpage_x_length)
+        kwargs = check_kwargs(kwargs, 'subpage_y_length', subpage_x_length * page_ratio)
+        # make sure the axis lable will show
+        kwargs = check_kwargs(kwargs, 'subpage_x_position', 1)
+        kwargs = check_kwargs(kwargs, 'subpage_y_position', 1)
+    else:
+        kwargs = check_kwargs(kwargs, 'super_page_x_length', 29.7)
+        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
+        kwargs = check_kwargs(kwargs, 'subpage_y_length', 25.0)
+        kwargs = check_kwargs(kwargs, 'subpage_x_position', 1)
+        kwargs = check_kwargs(kwargs, 'subpage_y_position', 1)
+
+    return kwargs
+
+
 def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
     """Get magics map background.
 
@@ -32,22 +60,22 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
     kwargs = check_kwargs(kwargs, 'page_id_line', 'off')
 
     if name.upper() == 'CHINA_CYLINDRICAL':                                                  # 中国陆地和海洋范围
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
-        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
-        kwargs = check_kwargs(kwargs, 'subpage_lower_left_longitude', 70.0)
-        kwargs = check_kwargs(kwargs, 'subpage_lower_left_latitude', 8.0)
-        kwargs = check_kwargs(kwargs, 'subpage_upper_right_longitude', 140.0)
-        kwargs = check_kwargs(kwargs, 'subpage_upper_right_latitude', 60.0)
+        map_region = [70.0, 140.0, 8.0, 160.0]
+        kwargs = get_page_setup(kwargs, map_region=map_region)
+        kwargs['subpage_lower_left_longitude'] = map_region[0]
+        kwargs['subpage_upper_right_longitude'] = map_region[1]
+        kwargs['subpage_lower_left_latitude'] = map_region[2]
+        kwargs['subpage_upper_right_latitude'] = map_region[3]
         project = magics.mmap(
             subpage_map_projection="cylindrical",
             **kwargs)
     elif name.upper() == 'CHINA_LAND_CYLINDRICAL':
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
-        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
-        kwargs = check_kwargs(kwargs, 'subpage_lower_left_longitude', 73.0)
-        kwargs = check_kwargs(kwargs, 'subpage_lower_left_latitude', 16.0)
-        kwargs = check_kwargs(kwargs, 'subpage_upper_right_longitude', 136.0)
-        kwargs = check_kwargs(kwargs, 'subpage_upper_right_latitude', 55.0)
+        map_region = [73.0, 136.0, 16.0, 55.0]
+        kwargs = get_page_setup(kwargs, map_region=map_region)
+        kwargs['subpage_lower_left_longitude'] = map_region[0]
+        kwargs['subpage_upper_right_longitude'] = map_region[1]
+        kwargs['subpage_lower_left_latitude'] = map_region[2]
+        kwargs['subpage_upper_right_latitude'] = map_region[3]
         project = magics.mmap(
             subpage_map_projection="cylindrical",
             **kwargs)
@@ -57,8 +85,7 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
             del kwargs['map_region']
         else:
             map_region = [70, 140, 8, 60]
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
-        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
+        kwargs = get_page_setup(kwargs, map_region=map_region)
         kwargs['subpage_lower_left_longitude'] = map_region[0]
         kwargs['subpage_upper_right_longitude'] = map_region[1]
         kwargs['subpage_lower_left_latitude'] = map_region[2]
@@ -67,8 +94,7 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
             subpage_map_projection="cylindrical",
             **kwargs)
     elif name.upper() == "CHINA_POLAR_STEREOGRAPHIC":
-        kwargs = check_kwargs(kwargs, 'subpage_x_length', 25.0)
-        kwargs = check_kwargs(kwargs, 'super_page_x_length', 25.5)
+        kwargs = get_page_setup(kwargs)
         kwargs = check_kwargs(kwargs, 'subpage_map_area_definition_polar', 'center')
         kwargs = check_kwargs(kwargs, 'subpage_map_vertical_longitude', 105)
         kwargs = check_kwargs(kwargs, 'subpage_map_centre_latitude', 35)
@@ -132,6 +158,7 @@ def get_mcoast(name='PROVINCE', **kwargs):
     elif name.upper() == 'PROVINCE':
         shpfile = pkg_resources.resource_filename('nmc_met_graphics', 'resources/maps/bou2_4l')
         kwargs = check_kwargs(kwargs, 'map_user_layer_colour', "navy")
+        kwargs = check_kwargs(kwargs, 'map_user_layer_thickness', 1)
         kwargs = check_kwargs(kwargs, 'map_label', "off")
         kwargs = check_kwargs(kwargs, 'map_grid', "off")
         coast = magics.mcoast(
@@ -141,6 +168,7 @@ def get_mcoast(name='PROVINCE', **kwargs):
     elif name.upper() == 'RIVER':
         shpfile = pkg_resources.resource_filename('nmc_met_graphics', 'resources/maps/hyd1_4l')
         kwargs = check_kwargs(kwargs, 'map_user_layer_colour', "blue")
+        kwargs = check_kwargs(kwargs, 'map_user_layer_thickness', 1)
         kwargs = check_kwargs(kwargs, 'map_label', "off")
         kwargs = check_kwargs(kwargs, 'map_grid', "off")
         coast = magics.mcoast(

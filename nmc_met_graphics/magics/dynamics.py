@@ -7,7 +7,6 @@
 Plot atmospheric dynamics maps.
 """
 
-import math
 import numpy as np
 import xarray as xr
 import scipy.ndimage as ndimage
@@ -41,7 +40,7 @@ def draw_wind_upper(uwind, vwind, lon, lat, gh=None, skip_vector=None,
 
     # check default parameters
     if skip_vector is None:
-        skip_vector = max(math.ceil(len(lon)/70), math.ceil(len(lat)/35))
+        skip_vector = util.get_skip_vector(lon, lat, map_region)
 
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
@@ -129,8 +128,11 @@ def draw_wind_upper(uwind, vwind, lon, lat, gh=None, skip_vector=None,
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'top',
+         legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
@@ -317,7 +319,7 @@ def draw_wind_high(uwind, vwind, lon, lat, gh=None, skip_vector=None,
 
     # check default parameters
     if skip_vector is None:
-        skip_vector = max(math.ceil(len(lon)/70), math.ceil(len(lat)/35))
+        skip_vector = util.get_skip_vector(lon, lat, map_region)
 
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
@@ -410,8 +412,11 @@ def draw_wind_high(uwind, vwind, lon, lat, gh=None, skip_vector=None,
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'top',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
@@ -468,7 +473,7 @@ def draw_vort_high(uwind, vwind, lon, lat, vort=None, gh=None, skip_vector=None,
 
     # check default parameters
     if skip_vector is None:
-        skip_vector = max(math.ceil(len(lon)/70), math.ceil(len(lat)/35))
+        skip_vector = util.get_skip_vector(lon, lat, map_region)
 
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
@@ -565,8 +570,11 @@ def draw_vort_high(uwind, vwind, lon, lat, vort=None, gh=None, skip_vector=None,
     # Add a legend
     legend = magics.mlegend(
         legend= 'on',
-        legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_automatic_position= 'top',
         legend_border= 'off',
         legend_border_colour= 'black',
@@ -625,7 +633,7 @@ def draw_vvel_high(uwind, vwind, wwind, lon, lat, vort=None, gh=None, skip_vecto
 
     # check default parameters
     if skip_vector is None:
-        skip_vector = max(math.ceil(len(lon)/70), math.ceil(len(lat)/35))
+        skip_vector = util.get_skip_vector(lon, lat, map_region)
 
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
@@ -713,8 +721,11 @@ def draw_vvel_high(uwind, vwind, wwind, lon, lat, vort=None, gh=None, skip_vecto
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'top',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
@@ -844,8 +855,11 @@ def draw_mslp(mslp, lon, lat, gh=None, map_region=None,
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'top',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',

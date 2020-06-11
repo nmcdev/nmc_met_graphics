@@ -7,7 +7,6 @@
 Moisture analysis maps.
 """
 
-import math
 import numpy as np
 import xarray as xr
 import Magics.macro as magics
@@ -39,7 +38,7 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
 
     # check default parameters
     if skip_vector is None:
-        skip_vector = max(math.ceil(len(lon)/70), math.ceil(len(lat)/35))
+        skip_vector = util.get_skip_vector(lon, lat, map_region)
 
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
@@ -133,8 +132,11 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'top',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
@@ -190,7 +192,7 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
 
     # check default parameters
     if skip_vector is None:
-        skip_vector = max(math.ceil(len(lon)/70), math.ceil(len(lat)/35))
+        skip_vector = util.get_skip_vector(lon, lat, map_region)
 
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
@@ -281,8 +283,11 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'top',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
@@ -408,8 +413,11 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
     legend = magics.mlegend(
         legend= 'on',
         legend_text_colour= 'black',
-        legend_box_mode= 'legend_box_mode',
-        legend_automatic_position= 'top',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
         legend_border= 'off',
         legend_border_colour= 'black',
         legend_box_blanking= 'on',
@@ -440,6 +448,168 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
     # Add china province
     china_coastlines = map_set.get_mcoast(name='PROVINCE')
     plots.append(china_coastlines)
+
+    # final plot
+    return magics.plot(*plots)
+
+
+def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None, 
+             map_region=None, head_info=None, date_obj=None, 
+             legend_pos='right', outfile=None):
+    """
+    Draw integrated Water Vapor Transport (IVT) .
+
+    Args:
+        iqu (np.array): u * q transport, 2D array, [nlat, nlon]
+        iqv (np.array): v * q transport, 2D array, [nlat, nlon]
+        lon (np.array): longitude, 1D array, [nlon]
+        lat (np.array): latitude, 1D array, [nlat]
+        mslp (np.array): mean sea level pressure, 2D array, [nlat, nlon]
+        skip_vector (integer): skip grid number for vector plot
+        map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
+        head_info (string, optional): head information string. Defaults to None.
+        date_obj (datetime, optional): datetime object, like 
+            date_obj = dt.datetime.strptime('2016071912','%Y%m%d%H'). Defaults to None.
+    """
+
+    # check default parameters
+    if skip_vector is None:
+        skip_vector = util.get_skip_vector(lon, lat, map_region)
+
+    # put data into fields
+    ivt_field = util.minput_2d_vector(iqu, iqv, lon, lat, skip=skip_vector)
+    ivt_mag_field = util.minput_2d(
+        np.sqrt(iqu*iqu + iqv*iqv), lon, lat, 
+        {'long_name': 'Integrated Water Vapor Transport', 'units': 'kg/m/s'})
+    if mslp is not None:
+        mslp_field = util.minput_2d(
+            mslp, lon, lat, {'long_name': 'mean sea level pressure', 'units': 'mb'})
+
+    #
+    # set up visual parameters
+    #
+
+    plots = []
+
+    # draw the figure
+    if outfile is not None:
+        output = magics.output(
+            output_formats= ['png'],
+            output_name_first_page_number= 'off',
+            output_width= out_png_width,
+            output_name= outfile)
+        plots.append(output)
+
+    # Setting the coordinates of the geographical area
+    if map_region is None:
+        china_map = map_set.get_mmap(
+            name='CHINA_CYLINDRICAL',
+            subpage_frame_thickness = 5)
+    else:
+        china_map = map_set.get_mmap(
+            name='CHINA_REGION_CYLINDRICAL',
+            map_region=map_region,
+            subpage_frame_thickness = 5)
+    plots.append(china_map)
+
+    # Background Coaslines
+    coastlines = map_set.get_mcoast(name='COAST_FILL')
+    plots.append(coastlines)
+
+    # Define the shading for the wind speed
+    ivt_mag_contour = magics.mcont(
+        legend= 'on',
+        contour= "off",
+        contour_level_selection_type= "level_list",
+        contour_level_list =  [i*50.0+150 for i in range(3)] + [i*100.0 + 300 for i in range(17)],
+        contour_shade= 'on', 
+        contour_shade_method= 'area_fill', 
+        contour_shade_colour_method = "list",
+        contour_shade_colour_list = [
+            '#fdd6c4', '#fcae92', '#fc8363', '#f6573e', '#de2b25', '#b81419', '#840711',
+            '#fbb1ba', '#f98cae', '#f25e9f', '#dc3296', '#b40781', '#890179', '#600070',
+            '#787878', '#8c8c8c', '#a0a0a0', '#b4b4b4', '#c8c8c8', '#dcdcdc'],
+        contour_highlight= 'off', 
+        contour_hilo= 'off', 
+        contour_label= 'off')
+    plots.extend([ivt_mag_field, ivt_mag_contour])
+
+    # Define the wind vector
+    if ivt_field is not None:
+        ivt_vector = magics.mwind(
+            legend= 'off',
+            wind_field_type= 'arrows',
+            wind_arrow_head_shape= 1,
+            wind_arrow_head_ratio= 0.5,
+            wind_arrow_thickness= 2,
+            wind_arrow_unit_velocity= 500.0,
+            wind_arrow_min_speed= 150.0,
+            wind_arrow_calm_below = 150,
+            wind_arrow_colour= '#31043a')
+        plots.extend([ivt_field, ivt_vector])
+
+    # Define the simple contouring for gh
+    if mslp is not None:
+        mslp_contour = magics.mcont(
+            legend= 'off', 
+            contour_level_selection_type= 'interval',
+            contour_interval= 20.,
+            contour_reference_level= 5880.,
+            contour_line_colour= 'black',
+            contour_line_thickness= 2,
+            contour_label= 'on',
+            contour_label_height= 0.5,
+            contour_highlight_colour= 'black',
+            contour_highlight_thickness= 4)
+        plots.extend([mslp_field, mslp_contour])
+
+    # Add a legend
+    legend = magics.mlegend(
+        legend= 'on',
+        legend_text_colour= 'black',
+        legend_box_mode= 'positional',
+        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_y_position= 1,
+        legend_box_x_length= 2,
+        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
+        legend_border= 'off',
+        legend_border_colour= 'black',
+        legend_box_blanking= 'on',
+        legend_display_type= 'continuous',
+        legend_title= "on",
+        legend_title_position_ratio=0.6,
+        legend_title_text= "Integrated Water Vapor Transport",
+        legend_title_font_size= 0.7,
+        legend_text_font_size = 0.6)
+    plots.append(legend)
+
+    # Add the title
+    text_lines = []
+    if head_info is not None:
+        text_lines.append("<font size='1'>{}</font>".format(head_info))
+    else:
+        text_lines.append("<font size='1'>Integrated Water Vapor Transport[kg/m/s]</font>")
+    if date_obj is not None:
+        text_lines.append("<font size='0.8' colour='red'>{}</font>".format(date_obj.strftime("%Y/%m/%d %H:%M(UTC)")))
+    else:
+        text_lines.append(" ")
+    title = magics.mtext(
+        text_lines = text_lines,
+        text_justification = 'left',
+        text_font_size = 0.6,
+        text_mode = "title",
+        text_colour = 'charcoal')
+    plots.append(title)
+
+    # Add china province
+    china_province_coastlines = map_set.get_mcoast(
+        name='PROVINCE', map_user_layer_thickness=2,
+        map_user_layer_colour='white')
+    plots.append(china_province_coastlines)
+    china_river_coastlines = map_set.get_mcoast(
+        name='RIVER', map_user_layer_thickness=2,
+        map_user_layer_colour='#71b2fd')
+    plots.append(china_river_coastlines)
 
     # final plot
     return magics.plot(*plots)
