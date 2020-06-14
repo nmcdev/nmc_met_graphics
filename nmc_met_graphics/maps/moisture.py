@@ -121,8 +121,7 @@ def ivt(initTime=None, fhour=0, frange=None, model='ECMWF', region='中国陆地
     # draw the figure
     plot = draw_ivt(
         iquData, iqvData, lon, lat, mslp=mslp, map_region=get_map_region(region),
-        title_kwargs={'name':model.upper(), 'head':'Integrated water vapor transport [kg/m/s] | MSLP',
-                      'time': time, 'fhour': fhour})
+        title_kwargs={'name':model.upper(), 'time': time, 'fhour': fhour})
     if noshow:
         return plot, str(int(fhour)).zfill(3)
     else:

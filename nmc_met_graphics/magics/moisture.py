@@ -10,12 +10,12 @@ Moisture analysis maps.
 import numpy as np
 import xarray as xr
 from nmc_met_graphics.magics import util, map_set, common
-from nmc_met_graphics.util import check_region_to_contour
+from nmc_met_graphics.util import check_region_to_contour, check_kwargs
 from Magics import macro as magics
 
 
 def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None, 
-                 map_region=None, head_info=None, date_obj=None, outfile=None):
+                 map_region=None, title_kwargs={}, outfile=None):
     """
     Draw high relative humidity.
 
@@ -28,9 +28,7 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
         gh (np.array): geopotential height, 2D array, [nlat, nlon]
         skip_vector (integer): skip grid number for vector plot
         map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
-        head_info (string, optional): head information string. Defaults to None.
-        date_obj (datetime, optional): datetime object, like 
-            date_obj = dt.datetime.strptime('2016071912','%Y%m%d%H'). Defaults to None.
+        title_kwargs (dictionaly, optional): keyword arguments for _get_title function.
     """
 
     # check default parameters
@@ -65,7 +63,7 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
     coastlines = map_set.get_mcoast(name='COAST_FILL')
     plots.append(coastlines)
 
-    # Define the shading for the wind speed
+    # Define the shading for the specific humidity
     rh_contour = magics.mcont(
         legend= 'on',
         contour_level_selection_type= 'level_list', 
@@ -89,66 +87,21 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
     plots.extend([rh_field, rh_contour])
 
     # Define the wind vector
-    wind_vector = magics.mwind(
-        legend= 'off',
-        wind_field_type= 'flags',
-        wind_flag_length = 0.6,
-        wind_thinning_factor= 2.,
-        wind_flag_style= 'solid', 
-        wind_flag_thickness= 1,
-        wind_flag_origin_marker = 'dot',
-        wind_flag_min_speed = 0.0,
-        wind_flag_colour = 'charcoal')
+    wind_vector = common._get_wind_flags()
     plots.extend([wind_field, wind_vector])
 
     # Define the simple contouring for gh
     if gh is not None:
-        gh_contour = magics.mcont(
-            legend= 'off', 
-            contour_level_selection_type= 'interval',
-            contour_interval= 20.,
-            contour_reference_level= 5880.,
-            contour_line_colour= 'black',
-            contour_line_thickness= 2,
-            contour_label= 'on',
-            contour_label_height= 0.5,
-            contour_highlight_colour= 'black',
-            contour_highlight_thickness= 4)
+        gh_contour = common._get_gh_contour()
         plots.extend([gh_field, gh_contour])
 
     # Add a legend
-    legend = magics.mlegend(
-        legend= 'on',
-        legend_text_colour= 'black',
-        legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
-        legend_box_y_position= 1,
-        legend_box_x_length= 2,
-        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
-        legend_border= 'off',
-        legend_border_colour= 'black',
-        legend_box_blanking= 'on',
-        legend_display_type= 'continuous',
-        legend_title = "on",
-        legend_title_text= "Relative Humidity",
-        legend_title_font_size= 0.6,
-        legend_text_font_size = 0.5)
+    legend = common._get_legend(china_map, title="Relative Humidity[%]")
     plots.append(legend)
 
     # Add the title
-    text_lines = []
-    if head_info is not None:
-        text_lines.append("<font size='1'>{}</font>".format(head_info))
-    else:
-        text_lines.append("<font size='1'>850hPa Wind[m/s], Relative Humidity[%] and 500hPa Height[gpm]</font>")
-    if date_obj is not None:
-        text_lines.append("<font size='0.8' colour='red'>{}</font>".format(date_obj.strftime("%Y/%m/%d %H:%M(UTC)")))
-    title = magics.mtext(
-        text_lines = text_lines,
-        text_justification = 'left',
-        text_font_size = 0.6,
-        text_mode = "title",
-        text_colour = 'charcoal')
+    title_kwargs = check_kwargs(title_kwargs, 'head', "Relative Humidity | Wind | 500hPa GH")
+    title = common._get_title(**title_kwargs)
     plots.append(title)
 
     # Add china province
@@ -160,7 +113,7 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
 
 
 def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None, 
-                 map_region=None, head_info=None, date_obj=None, outfile=None):
+                 map_region=None, title_kwargs={}, outfile=None):
     """
     Draw high specific  humidity.
 
@@ -173,9 +126,7 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
         gh (np.array): geopotential height, 2D array, [nlat, nlon]
         skip_vector (integer): skip grid number for vector plot
         map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
-        head_info (string, optional): head information string. Defaults to None.
-        date_obj (datetime, optional): datetime object, like 
-            date_obj = dt.datetime.strptime('2016071912','%Y%m%d%H'). Defaults to None.
+        title_kwargs (dictionaly, optional): keyword arguments for _get_title function.
     """
 
     # check default parameters
@@ -231,66 +182,21 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
     plots.extend([sp_field, sp_contour])
 
     # Define the wind vector
-    wind_vector = magics.mwind(
-        legend= 'off',
-        wind_field_type= 'flags',
-        wind_flag_length = 0.6,
-        wind_thinning_factor= 2.,
-        wind_flag_style= 'solid', 
-        wind_flag_thickness= 1,
-        wind_flag_origin_marker = 'dot',
-        wind_flag_min_speed = 0.0,
-        wind_flag_colour = 'charcoal')
+    wind_vector = common._get_wind_flags()
     plots.extend([wind_field, wind_vector])
 
     # Define the simple contouring for gh
     if gh is not None:
-        gh_contour = magics.mcont(
-            legend= 'off', 
-            contour_level_selection_type= 'interval',
-            contour_interval= 20.,
-            contour_reference_level= 5880.,
-            contour_line_colour= 'black',
-            contour_line_thickness= 2,
-            contour_label= 'on',
-            contour_label_height= 0.5,
-            contour_highlight_colour= 'black',
-            contour_highlight_thickness= 4)
+        gh_contour = common._get_gh_contour()
         plots.extend([gh_field, gh_contour])
 
     # Add a legend
-    legend = magics.mlegend(
-        legend= 'on',
-        legend_text_colour= 'black',
-        legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
-        legend_box_y_position= 1,
-        legend_box_x_length= 2,
-        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
-        legend_border= 'off',
-        legend_border_colour= 'black',
-        legend_box_blanking= 'on',
-        legend_display_type= 'continuous',
-        legend_title = "on",
-        legend_title_text= "Specific Humidity",
-        legend_title_font_size= 0.6,
-        legend_text_font_size = 0.5)
+    legend = common._get_legend(china_map, title="Specific Humidity [g/kg]")
     plots.append(legend)
 
     # Add the title
-    text_lines = []
-    if head_info is not None:
-        text_lines.append("<font size='1'>{}</font>".format(head_info))
-    else:
-        text_lines.append("<font size='1'>850hPa Wind[m/s], Specific Humidity[g/Kg] and 500hPa Height[gpm]</font>")
-    if date_obj is not None:
-        text_lines.append("<font size='0.8' colour='red'>{}</font>".format(date_obj.strftime("%Y/%m/%d %H:%M(UTC)")))
-    title = magics.mtext(
-        text_lines = text_lines,
-        text_justification = 'left',
-        text_font_size = 0.6,
-        text_mode = "title",
-        text_colour = 'charcoal')
+    title_kwargs = check_kwargs(title_kwargs, 'head', "Specific Humidity | 500hPa GH")
+    title = common._get_title(**title_kwargs)
     plots.append(title)
 
     # Add china province
@@ -302,7 +208,7 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
 
 
 def draw_pwat(pwat, lon, lat, gh=None, map_region=None, 
-              head_info=None, date_obj=None, outfile=None):
+              title_kwargs={}, outfile=None):
     """
     Draw precipitable water.
 
@@ -310,10 +216,9 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
         pwat (np.array): pressure, 2D array, [nlat, nlon]
         lon (np.array): longitude, 1D array, [nlon]
         lat (np.array): latitude, 1D array, [nlat]
+        gh (np.array, optional), geopotential height, 2D array, [nlat, nlon]
         map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
-        head_info (string, optional): head information string. Defaults to None.
-        date_obj (datetime, optional): datetime object, like 
-            date_obj = dt.datetime.strptime('2016071912','%Y%m%d%H'). Defaults to None.
+        title_kwargs (dictionaly, optional): keyword arguments for _get_title function.
     """
 
     # put data into fields
@@ -343,7 +248,7 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
     coastlines = map_set.get_mcoast(name='COAST_FILL')
     plots.append(coastlines)
 
-    # Define the shading for teperature
+    # Define the shading for precipitation water.
     pwat_contour = magics.mcont(
         legend= 'on',
         contour_shade= "on",
@@ -366,53 +271,16 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
 
     # Define the simple contouring for gh
     if gh is not None:
-        gh_contour = magics.mcont(
-            legend= 'off', 
-            contour_level_selection_type= 'interval',
-            contour_interval= 20.,
-            contour_reference_level= 5880.,
-            contour_line_colour= 'black',
-            contour_line_thickness= 2,
-            contour_label= 'on',
-            contour_label_height= 0.5,
-            contour_highlight_colour= 'black',
-            contour_highlight_thickness= 4)
+        gh_contour = common._get_gh_contour()
         plots.extend([gh_field, gh_contour])
 
     # Add a legend
-    legend = magics.mlegend(
-        legend= 'on',
-        legend_text_colour= 'black',
-        legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
-        legend_box_y_position= 1,
-        legend_box_x_length= 2,
-        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
-        legend_border= 'off',
-        legend_border_colour= 'black',
-        legend_box_blanking= 'on',
-        legend_display_type= 'continuous',
-        legend_label_frequency= 2,
-        legend_title = "on",
-        legend_title_text= "Precipitable Water",
-        legend_title_font_size= 0.6,
-        legend_text_font_size = 0.5)
+    legend = common._get_legend(china_map, title="Precipitable water [mm]", frequency=2)
     plots.append(legend)
 
     # Add the title
-    text_lines = []
-    if head_info is not None:
-        text_lines.append("<font size='1'>{}</font>".format(head_info))
-    else:
-        text_lines.append("<font size='1'>Precipitable Water (mm)</font>")
-    if date_obj is not None:
-        text_lines.append("<font size='0.8' colour='red'>{}</font>".format(date_obj.strftime("%Y/%m/%d %H:%M(UTC)")))
-    title = magics.mtext(
-        text_lines = text_lines,
-        text_justification = 'left',
-        text_font_size = 0.6,
-        text_mode = "title",
-        text_colour = 'charcoal')
+    title_kwargs = check_kwargs(title_kwargs, 'head', "Precipitable water | 500hPa GH")
+    title = common._get_title(**title_kwargs)
     plots.append(title)
 
     # Add china province
@@ -424,8 +292,7 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
 
 
 def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None, 
-             map_region=None, legend_pos='right', title_kwargs={},
-             outfile=None):
+             map_region=None, title_kwargs={}, outfile=None):
     """
     Draw integrated Water Vapor Transport (IVT) .
 
@@ -437,7 +304,7 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
         mslp (np.array): mean sea level pressure, 2D array, [nlat, nlon]
         skip_vector (integer): skip grid number for vector plot
         map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
-        title_kwargs (dictionaly, optional): keyword arguments for get_title function.
+        title_kwargs (dictionaly, optional): keyword arguments for _get_title function.
     """
 
     # check default parameters
@@ -510,41 +377,16 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
     # Define the simple contouring for gh
     if mslp is not None:
         interval = check_region_to_contour(map_region, 4, 2, thred=600)
-        mslp_contour = magics.mcont(
-            legend= 'off', 
-            contour_level_selection_type= 'interval',
-            contour_interval= interval,
-            contour_reference_level= 1000.,
-            contour_line_colour= '#399c9c',
-            contour_line_thickness= 3,
-            contour_label= 'on',
-            contour_label_height= 0.5,
-            contour_highlight_colour= '#399c9c',
-            contour_highlight_thickness= 4)
+        mslp_contour = common._get_mslp_contour(interval=interval)
         plots.extend([mslp_field, mslp_contour])
 
     # Add a legend
-    legend = magics.mlegend(
-        legend= 'on',
-        legend_text_colour= 'black',
-        legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
-        legend_box_y_position= 1,
-        legend_box_x_length= 2,
-        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
-        legend_border= 'off',
-        legend_border_colour= 'black',
-        legend_box_blanking= 'on',
-        legend_display_type= 'continuous',
-        legend_title= "on",
-        legend_title_position_ratio=0.6,
-        legend_title_text= "Integrated Water Vapor Transport",
-        legend_title_font_size= 0.7,
-        legend_text_font_size = 0.6)
+    legend = common._get_legend(china_map, title="Integrated Water Vapor Transport [kg/m/s]")
     plots.append(legend)
 
     # Add the title
-    title = common.get_title(**title_kwargs)
+    title_kwargs = check_kwargs(title_kwargs, 'head', "Integrated Water Vapor Transport | MSLP")
+    title = common._get_title(**title_kwargs)
     plots.append(title)
 
     # Add china province
@@ -556,10 +398,6 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
         name='RIVER', map_user_layer_thickness=2,
         map_user_layer_colour='#71b2fd')
     plots.append(china_river_coastlines)
-
-    # add logo
-    logo = map_set.get_logo()
-    plots.append(logo)
 
     # final plot
     return util.magics_plot(plots, outfile)

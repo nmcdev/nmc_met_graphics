@@ -9,12 +9,13 @@ Plot atmospheric thermal maps.
 
 import numpy as np
 import xarray as xr
-from nmc_met_graphics.magics import util, map_set
+from nmc_met_graphics.magics import util, map_set, common
+from nmc_met_graphics.util import check_kwargs
 from Magics import macro as magics
 
 
 def draw_temp_high(temp, lon, lat, gh=None, map_region=None, 
-                   head_info=None, date_obj=None, outfile=None):
+                   title_kwargs={}, outfile=None):
     """
     Draw high temperature field.
 
@@ -24,9 +25,7 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
         lat (np.array): latitude, 1D array, [nlat]
         gh (np.array): geopotential height, 2D array, [nlat, nlon]
         map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
-        head_info (string, optional): head information string. Defaults to None.
-        date_obj (datetime, optional): datetime object, like 
-            date_obj = dt.datetime.strptime('2016071912','%Y%m%d%H'). Defaults to None.
+        title_kwargs (dictionaly, optional): keyword arguments for _get_title function.
     """
 
     # put data into fields
@@ -86,52 +85,16 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
 
     # Define the simple contouring for gh
     if gh is not None:
-        gh_contour = magics.mcont(
-            legend= 'off', 
-            contour_level_selection_type= 'interval',
-            contour_interval= 20.,
-            contour_reference_level= 5880.,
-            contour_line_colour= 'black',
-            contour_line_thickness= 2,
-            contour_label= 'on',
-            contour_label_height= 0.5,
-            contour_highlight_colour= 'black',
-            contour_highlight_thickness= 4)
+        gh_contour = common._get_gh_contour()
         plots.extend([gh_field, gh_contour])
 
     # Add a legend
-    legend = magics.mlegend(
-        legend= 'on',
-        legend_text_colour= 'black',
-        legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
-        legend_box_y_position= 1,
-        legend_box_x_length= 2,
-        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
-        legend_border= 'off',
-        legend_border_colour= 'black',
-        legend_box_blanking= 'on',
-        legend_display_type= 'continuous',
-        legend_title = "on",
-        legend_title_text= "Temperature",
-        legend_title_font_size= 0.6,
-        legend_text_font_size = 0.5)
+    legend = common._get_legend(china_map, title="Temperature [Degree]")
     plots.append(legend)
 
     # Add the title
-    text_lines = []
-    if head_info is not None:
-        text_lines.append("<font size='1'>{}</font>".format(head_info))
-    else:
-        text_lines.append("<font size='1'>850hPa Temperature[Degree] and 500hPa Height[gpm]</font>")
-    if date_obj is not None:
-        text_lines.append("<font size='0.8' colour='red'>{}</font>".format(date_obj.strftime("%Y/%m/%d %H:%M(UTC)")))
-    title = magics.mtext(
-        text_lines = text_lines,
-        text_justification = 'left',
-        text_font_size = 0.6,
-        text_mode = "title",
-        text_colour = 'charcoal')
+    title_kwargs = check_kwargs(title_kwargs, 'head', "850hPa T | 500hPa GH")
+    title = common._get_title(**title_kwargs)
     plots.append(title)
 
     # Add china province
@@ -140,3 +103,4 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
 
     # final plot
     return util.magics_plot(plots, outfile)
+

@@ -9,12 +9,13 @@ Plot potential vorticity analysis maps.
 
 import numpy as np
 import xarray as xr
-from nmc_met_graphics.magics import util, map_set
+from nmc_met_graphics.magics import util, map_set, common
+from nmc_met_graphics.util import check_kwargs
 from Magics import macro as magics
 
 
 def draw_pres_pv2(pres, lon, lat, map_region=None, 
-                  head_info=None, date_obj=None, outfile=None):
+                  title_kwargs={}, outfile=None):
     """
     Draw pressure field on 2.0PVU surface.
 
@@ -23,9 +24,7 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
         lon (np.array): longitude, 1D array, [nlon]
         lat (np.array): latitude, 1D array, [nlat]
         map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
-        head_info (string, optional): head information string. Defaults to None.
-        date_obj (datetime, optional): datetime object, like 
-            date_obj = dt.datetime.strptime('2016071912','%Y%m%d%H'). Defaults to None.
+        title_kwargs (dictionaly, optional): keyword arguments for _get_title function.
     """
 
     # put data into fields
@@ -53,7 +52,7 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
     coastlines = map_set.get_mcoast(name='COAST_FILL')
     plots.append(coastlines)
 
-    # Define the shading for teperature
+    # Define the shading for pressure
     pres_contour = magics.mcont(
         legend= 'on',
         contour_shade= "on",
@@ -69,39 +68,12 @@ def draw_pres_pv2(pres, lon, lat, map_region=None,
     plots.extend([pres_field, pres_contour])
 
     # Add a legend
-    legend = magics.mlegend(
-        legend= 'on',
-        legend_text_colour= 'black',
-        legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
-        legend_box_y_position= 1,
-        legend_box_x_length= 2,
-        legend_box_y_length= china_map.args['subpage_y_length']*1.0,
-        legend_border= 'off',
-        legend_border_colour= 'black',
-        legend_box_blanking= 'on',
-        legend_display_type= 'continuous',
-        legend_label_frequency= 2,
-        legend_title = "on",
-        legend_title_text= "Pressure",
-        legend_title_font_size= 0.6,
-        legend_text_font_size = 0.5)
+    legend = common._get_legend(china_map, title="Pressure [mb]", frequency=2)
     plots.append(legend)
 
     # Add the title
-    text_lines = []
-    if head_info is not None:
-        text_lines.append("<font size='1'>{}</font>".format(head_info))
-    else:
-        text_lines.append("<font size='1'>2 PVU Surface Pressure (mb)</font>")
-    if date_obj is not None:
-        text_lines.append("<font size='0.8' colour='red'>{}</font>".format(date_obj.strftime("%Y/%m/%d %H:%M(UTC)")))
-    title = magics.mtext(
-        text_lines = text_lines,
-        text_justification = 'left',
-        text_font_size = 0.6,
-        text_mode = "title",
-        text_colour = 'charcoal')
+    title_kwargs = check_kwargs(title_kwargs, 'head', "PVU Surface Pressure")
+    title = common._get_title(**title_kwargs)
     plots.append(title)
 
     # Add china province

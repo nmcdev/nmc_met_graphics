@@ -19,7 +19,7 @@ def check_kwargs(kwargs, key, default):
         default (object): python object.
     """
 
-    if not key in kwargs.keys():
+    if key not in kwargs:
             kwargs[key] = default
 
     return kwargs

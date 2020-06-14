@@ -21,6 +21,8 @@ except ImportError:
     print("Magics not installed (conda install -c conda-forge magics)")
     sys.exit(1)
 
+from nmc_met_graphics.magics import map_set
+
 
 _MAGICS_LOCK = threading.Lock()
 
@@ -39,16 +41,23 @@ def magics_plot(plots, outfile=None):
 
         base, _ = os.path.splitext(outfile)
 
+        # add outfile file
         img = magics.output(
           output_formats= ['png'],
           output_name_first_page_number= 'off',
           output_width= 1000,
           output_name= base)
-
         all = [img]
         all.extend(plots)
-        magics._plot(*all)
 
+        # add logo
+        logo = map_set.get_logo()
+        all.append(logo)
+
+        # call magics plot function
+        magics._plot(*all)
+        
+        # read image from outfile
         image = Image.open(outfile)
         if remove_flag:
             os.unlink(outfile)
