@@ -9,12 +9,8 @@ Plot atmospheric thermal maps.
 
 import numpy as np
 import xarray as xr
-import Magics.macro as magics
 from nmc_met_graphics.magics import util, map_set
-
-
-# global variables
-out_png_width = 1200
+from Magics import macro as magics
 
 
 def draw_temp_high(temp, lon, lat, gh=None, map_region=None, 
@@ -43,15 +39,6 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
     #
 
     plots = []
-
-    # draw the figure
-    if outfile is not None:
-        output = magics.output(
-            output_formats= ['png'],
-            output_name_first_page_number= 'off',
-            output_width= out_png_width,
-            output_name= outfile)
-        plots.append(output)
 
     # Setting the coordinates of the geographical area
     if map_region is None:
@@ -117,7 +104,7 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
         legend= 'on',
         legend_text_colour= 'black',
         legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
         legend_box_y_position= 1,
         legend_box_x_length= 2,
         legend_box_y_length= china_map.args['subpage_y_length']*1.0,
@@ -152,4 +139,4 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
     plots.append(china_coastlines)
 
     # final plot
-    return magics.plot(*plots)
+    return util.magics_plot(plots, outfile)

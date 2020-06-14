@@ -9,8 +9,8 @@ Provide the map background.
 
 import pkg_resources
 import numpy as np
-import Magics.macro as magics
 from nmc_met_graphics.util import check_kwargs
+from Magics import macro as magics
 
 
 def get_page_setup(kwargs, map_region=None):
@@ -29,7 +29,7 @@ def get_page_setup(kwargs, map_region=None):
         kwargs = check_kwargs(kwargs, 'subpage_x_length', subpage_x_length)
         kwargs = check_kwargs(kwargs, 'subpage_y_length', subpage_x_length * page_ratio)
         # make sure the axis lable will show
-        kwargs = check_kwargs(kwargs, 'subpage_x_position', 1)
+        kwargs = check_kwargs(kwargs, 'subpage_x_position', 1.2)
         kwargs = check_kwargs(kwargs, 'subpage_y_position', 1)
     else:
         kwargs = check_kwargs(kwargs, 'super_page_x_length', 29.7)
@@ -39,6 +39,17 @@ def get_page_setup(kwargs, map_region=None):
         kwargs = check_kwargs(kwargs, 'subpage_y_position', 1)
 
     return kwargs
+
+
+def get_logo():
+    """
+    Get the logo image.
+    """
+    imagefile = pkg_resources.resource_filename(
+        'nmc_met_graphics', 'resources/logo/nmc_large.png')
+    logo = magics.mimport(
+        import_file_name=imagefile, import_x_position=1.2, import_y_position=1)
+    return logo
 
 
 def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):

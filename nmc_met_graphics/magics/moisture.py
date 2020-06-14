@@ -9,12 +9,9 @@ Moisture analysis maps.
 
 import numpy as np
 import xarray as xr
-import Magics.macro as magics
-from nmc_met_graphics.magics import util, map_set
-
-
-# global variables
-out_png_width = 1200
+from nmc_met_graphics.magics import util, map_set, common
+from nmc_met_graphics.util import check_region_to_contour
+from Magics import macro as magics
 
 
 def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None, 
@@ -51,15 +48,6 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
     #
 
     plots = []
-
-    # draw the figure
-    if outfile is not None:
-        output = magics.output(
-            output_formats= ['png'],
-            output_name_first_page_number= 'off',
-            output_width= out_png_width,
-            output_name= outfile)
-        plots.append(output)
 
     # Setting the coordinates of the geographical area
     if map_region is None:
@@ -133,7 +121,7 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
         legend= 'on',
         legend_text_colour= 'black',
         legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
         legend_box_y_position= 1,
         legend_box_x_length= 2,
         legend_box_y_length= china_map.args['subpage_y_length']*1.0,
@@ -168,7 +156,7 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
     plots.append(china_coastlines)
 
     # final plot
-    return magics.plot(*plots)
+    return util.magics_plot(plots, outfile)
 
 
 def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None, 
@@ -205,15 +193,6 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
     #
 
     plots = []
-
-    # draw the figure
-    if outfile is not None:
-        output = magics.output(
-            output_formats= ['png'],
-            output_name_first_page_number= 'off',
-            output_width= out_png_width,
-            output_name= outfile)
-        plots.append(output)
 
     # Setting the coordinates of the geographical area
     if map_region is None:
@@ -284,7 +263,7 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
         legend= 'on',
         legend_text_colour= 'black',
         legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
         legend_box_y_position= 1,
         legend_box_x_length= 2,
         legend_box_y_length= china_map.args['subpage_y_length']*1.0,
@@ -319,7 +298,7 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
     plots.append(china_coastlines)
 
     # final plot
-    return magics.plot(*plots)
+    return util.magics_plot(plots, outfile)
 
 
 def draw_pwat(pwat, lon, lat, gh=None, map_region=None, 
@@ -347,15 +326,6 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
     #
 
     plots = []
-
-    # draw the figure
-    if outfile is not None:
-        output = magics.output(
-            output_formats= ['png'],
-            output_name_first_page_number= 'off',
-            output_width= out_png_width,
-            output_name= outfile)
-        plots.append(output)
 
     # Setting the coordinates of the geographical area
     if map_region is None:
@@ -414,7 +384,7 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
         legend= 'on',
         legend_text_colour= 'black',
         legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
         legend_box_y_position= 1,
         legend_box_x_length= 2,
         legend_box_y_length= china_map.args['subpage_y_length']*1.0,
@@ -450,12 +420,12 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
     plots.append(china_coastlines)
 
     # final plot
-    return magics.plot(*plots)
+    return util.magics_plot(plots, outfile)
 
 
 def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None, 
-             map_region=None, head_info=None, date_obj=None, 
-             legend_pos='right', outfile=None):
+             map_region=None, legend_pos='right', title_kwargs={},
+             outfile=None):
     """
     Draw integrated Water Vapor Transport (IVT) .
 
@@ -467,9 +437,7 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
         mslp (np.array): mean sea level pressure, 2D array, [nlat, nlon]
         skip_vector (integer): skip grid number for vector plot
         map_region (list or tuple): the map region limit, [lonmin, lonmax, latmin, latmax]
-        head_info (string, optional): head information string. Defaults to None.
-        date_obj (datetime, optional): datetime object, like 
-            date_obj = dt.datetime.strptime('2016071912','%Y%m%d%H'). Defaults to None.
+        title_kwargs (dictionaly, optional): keyword arguments for get_title function.
     """
 
     # check default parameters
@@ -490,15 +458,6 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
     #
 
     plots = []
-
-    # draw the figure
-    if outfile is not None:
-        output = magics.output(
-            output_formats= ['png'],
-            output_name_first_page_number= 'off',
-            output_width= out_png_width,
-            output_name= outfile)
-        plots.append(output)
 
     # Setting the coordinates of the geographical area
     if map_region is None:
@@ -542,7 +501,7 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
             wind_arrow_head_shape= 1,
             wind_arrow_head_ratio= 0.5,
             wind_arrow_thickness= 2,
-            wind_arrow_unit_velocity= 500.0,
+            wind_arrow_unit_velocity= 1000.0,
             wind_arrow_min_speed= 150.0,
             wind_arrow_calm_below = 150,
             wind_arrow_colour= '#31043a')
@@ -550,16 +509,17 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
 
     # Define the simple contouring for gh
     if mslp is not None:
+        interval = check_region_to_contour(map_region, 4, 2, thred=600)
         mslp_contour = magics.mcont(
             legend= 'off', 
             contour_level_selection_type= 'interval',
-            contour_interval= 20.,
-            contour_reference_level= 5880.,
-            contour_line_colour= 'black',
-            contour_line_thickness= 2,
+            contour_interval= interval,
+            contour_reference_level= 1000.,
+            contour_line_colour= '#399c9c',
+            contour_line_thickness= 3,
             contour_label= 'on',
             contour_label_height= 0.5,
-            contour_highlight_colour= 'black',
+            contour_highlight_colour= '#399c9c',
             contour_highlight_thickness= 4)
         plots.extend([mslp_field, mslp_contour])
 
@@ -568,7 +528,7 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
         legend= 'on',
         legend_text_colour= 'black',
         legend_box_mode= 'positional',
-        legend_box_x_position= china_map.args['subpage_x_length']+1.5,
+        legend_box_x_position= china_map.args['subpage_x_length']+1.6,
         legend_box_y_position= 1,
         legend_box_x_length= 2,
         legend_box_y_length= china_map.args['subpage_y_length']*1.0,
@@ -584,32 +544,22 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
     plots.append(legend)
 
     # Add the title
-    text_lines = []
-    if head_info is not None:
-        text_lines.append("<font size='1'>{}</font>".format(head_info))
-    else:
-        text_lines.append("<font size='1'>Integrated Water Vapor Transport[kg/m/s]</font>")
-    if date_obj is not None:
-        text_lines.append("<font size='0.8' colour='red'>{}</font>".format(date_obj.strftime("%Y/%m/%d %H:%M(UTC)")))
-    else:
-        text_lines.append(" ")
-    title = magics.mtext(
-        text_lines = text_lines,
-        text_justification = 'left',
-        text_font_size = 0.6,
-        text_mode = "title",
-        text_colour = 'charcoal')
+    title = common.get_title(**title_kwargs)
     plots.append(title)
 
     # Add china province
     china_province_coastlines = map_set.get_mcoast(
         name='PROVINCE', map_user_layer_thickness=2,
-        map_user_layer_colour='white')
+        map_user_layer_colour='black')
     plots.append(china_province_coastlines)
     china_river_coastlines = map_set.get_mcoast(
         name='RIVER', map_user_layer_thickness=2,
         map_user_layer_colour='#71b2fd')
     plots.append(china_river_coastlines)
 
+    # add logo
+    logo = map_set.get_logo()
+    plots.append(logo)
+
     # final plot
-    return magics.plot(*plots)
+    return util.magics_plot(plots, outfile)

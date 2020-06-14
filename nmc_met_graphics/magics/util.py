@@ -7,16 +7,52 @@
   Miscellaneous magics funcations.
 """
 
+import os
 import sys
 import math
 import numpy as np
+from PIL import Image
+import threading
+import tempfile
 
 try:
     from Magics import macro as magics
 except ImportError:
-    print("""Magics not installed. Please refer to 
-      https://anaconda.org/conda-forge/magics""")
+    print("Magics not installed (conda install -c conda-forge magics)")
     sys.exit(1)
+
+
+_MAGICS_LOCK = threading.Lock()
+
+
+def magics_plot(plots, outfile=None):
+    """
+    调用magics生成图像文件, 并读取文件内容返回图像数组.
+    refer to https://github.com/ecmwf/magics-python/blob/master/Magics/macro.py  848-878行
+    """
+    
+    with _MAGICS_LOCK:
+        if outfile is None:
+            f, outfile = tempfile.mkstemp(".png")
+            os.close(f)
+            remove_flag = True
+
+        base, _ = os.path.splitext(outfile)
+
+        img = magics.output(
+          output_formats= ['png'],
+          output_name_first_page_number= 'off',
+          output_width= 1000,
+          output_name= base)
+
+        all = [img]
+        all.extend(plots)
+        magics._plot(*all)
+
+        image = Image.open(outfile)
+        if remove_flag:
+            os.unlink(outfile)
+        return image
 
 
 def get_skip_vector(lon, lat, map_region):
