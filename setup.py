@@ -40,12 +40,8 @@ setup(
     include_package_data=True,
     exclude_package_data={'': ['.gitignore']},
 
-    install_requires=['numpy', 'scipy', 'matplotlib',
-                      'netCDF4', 'pandas', 'xarray', 'pyshp',
-                      'cartopy', 'Shapely', 'metpy'],
-    dependency_links=[
-      'git+https://github.com/nmcdev/nmc_met_base.git@master#egg=nmc_met_base',
-      'git+https://github.com/nmcdev/nmc_met_io.git@master#egg=nmc_met_io'],
+    install_requires=['numpy', 'matplotlib', 'xarray', 'pandas',
+                      'cartopy', 'metpy', 'netCDF4', 'pyshp', 'Shapely'],
     python_requires='>=3',
     zip_safe = False
 )
