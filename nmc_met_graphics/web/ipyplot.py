@@ -331,9 +331,9 @@ def display_image_gallery(images, labels, img_width=200, format='PNG'):
         ' div.desc {padding: 15px; text-align: center;}' +
         ' .overlay {position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.7); transition: opacity 500ms; visibility: hidden; opacity: 0;}' +
         ' .overlay:target {visibility: visible; opacity: 1;}' +
-        ' .popup {margin: 70px auto; padding: 20px; background: #fff; border-radius: 5px; text-align: justify; width: 60%; left: 30%; top: 10%; position: fixed; transition: all 5s ease-in-out;}' +
+        ' .popup {margin: 70px auto; padding: 20px; background: #fff; border-radius: 5px; text-align: justify; width: 60%; left: 30%; top: 10%; position: fixed; transition: all .5s ease-in-out;}' +
         ' .popup h2 {margin-top: 0; color: #333; font-family: Tahoma, Arial, sans-serif;}' +
-        ' .popup .close {position: absolute; top: 20px; right: 30px; transition: all 200ms; font-size: 30px; font-weight: bold; text-decoration: none; color: #333;}' +
+        ' .popup .close {position: absolute; top: 20px; right: 30px; transition: all 50ms; font-size: 30px; font-weight: bold; text-decoration: none; color: #333;}' +
         ' .popup .close:hover {color: #06D85F;}' +
         ' .popup .content {max-height: 60%; overflow: auto;}' +
         #' @media screen and (max-width: 1200px){ .box{width: 70%;} .popup{width: 70%;}}' +
