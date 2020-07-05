@@ -25,7 +25,8 @@ from nmc_met_graphics.plot.util import add_gridlines
 
 def draw_total_precipitation(prep, map_extent=(107., 112, 23.2, 26.5),
                              back_image='terrain-background', back_image_zoom=8, title="降水量实况图",
-                             draw_station=True, station_info='cities', station_size=22, just_contourf=False):
+                             draw_station=True, station_info='cities', station_size=22, 
+                             just_contourf=False):
     """
     该程序用于显示多日的累积降水量分布特征, 2020/6/7按业务要求制作.
 

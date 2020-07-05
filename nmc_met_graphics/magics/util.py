@@ -22,6 +22,7 @@ except ImportError:
     sys.exit(1)
 
 from nmc_met_graphics.magics import map_set
+from nmc_met_base.grid import grid_subset
 
 
 _MAGICS_LOCK = threading.Lock()
@@ -79,7 +80,7 @@ def get_skip_vector(lon, lat, map_region):
     return skip_vector
 
 
-def minput_2d(data, lon, lat, metadata):
+def minput_2d(data, lon, lat, metadata, map_region=None):
     """
     Put the data into magics minput function.
     minput is used 2 define matrices as input for contouring or
@@ -91,11 +92,19 @@ def minput_2d(data, lon, lat, metadata):
         lat (np.float64): 1D vector, [nlat]
         metadata (dictionary): variable name and units information, 
             like {'units': 'K', 'long_name': '2 metre temperature'}. Defaults to None.
+        map_region (list, optional): if set, the data will fit to the map_region. 
+                                     [lonmin, lonmax, latmin, latmax]
     """
     
     lat = np.squeeze(lat.astype(np.float64))
     lon = np.squeeze(lon.astype(np.float64))
     input_field_values = np.squeeze(data.astype(np.float64))
+
+    if map_region is not None:
+        loni, lonj, lati, latj = grid_subset(lon, lat, map_region)
+        lon = lon[loni:lonj]
+        lat = lat[lati:latj]
+        input_field_values = input_field_values[lati:latj, loni:lonj]
 
     # put values into magics
     return magics.minput(
@@ -106,7 +115,7 @@ def minput_2d(data, lon, lat, metadata):
         input_metadata = metadata)
 
 
-def minput_2d_vector(udata, vdata, lon, lat, skip=1, metadata=None):
+def minput_2d_vector(udata, vdata, lon, lat, skip=1, metadata=None, map_region=None):
     """
     Put the data into magics minput function.
     minput is used 2 define matrices as input for contouring or
@@ -120,6 +129,8 @@ def minput_2d_vector(udata, vdata, lon, lat, skip=1, metadata=None):
         skip (int, optional): grid skip point number. Defaults to 1.
         metadata (dictionary): variable name and units information, 
             like {'units': 'm/s', 'long_name': 'wind field'}. Defaults to None.
+        map_region (list, optional): if set, the data will fit to the map_region. 
+                                     [lonmin, lonmax, latmin, latmax]
     """
 
     # extract values
@@ -127,6 +138,12 @@ def minput_2d_vector(udata, vdata, lon, lat, skip=1, metadata=None):
     lon = np.squeeze(lon.astype(np.float64))    # 1D vector
     uwind_field = np.squeeze(udata.astype(np.float64))    # 2D array, [nlat, nlon]
     vwind_field = np.squeeze(vdata.astype(np.float64))    # 2D array, [nlat, nlon]
+    if map_region is not None:
+        loni, lonj, lati, latj = grid_subset(lon, lat, map_region)
+        lon = lon[loni:lonj]
+        lat = lat[lati:latj]
+        uwind_field = uwind_field[lati:latj, loni:lonj]
+        vwind_field = vwind_field[lati:latj, loni:lonj]
     lon, lat = np.meshgrid(lon, lat)
 
     # skip values and flatten
