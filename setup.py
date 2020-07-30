@@ -65,7 +65,9 @@ setup(
       'metpy>=0.12.0',
       'netCDF4>=1.5.3',
       'pyshp>=2.1.0',
-      'Shapely>=1.7.0']
+      'Shapely>=1.7.0',
+      'nmc-met_io>=0.1.0',
+      'nmc-met-base>=0.1.0']
 )
 
 # development mode (DOS command):
