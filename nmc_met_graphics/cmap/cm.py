@@ -87,6 +87,32 @@ def make_cmap(incolors, position=None, rgb=False, hex=False):
     return cmap
 
 
+def discrete_cmap(N, base_cmap=None):
+    """Create an N-bin discrete colormap from the specified input map
+    
+    Examples:
+        N = 5
+        x = np.random.randn(40)
+        y = np.random.randn(40)
+        c = np.random.randint(N, size=40)
+
+        # Edit: don't use the default ('jet') because it makes @mwaskom mad...
+        plt.scatter(x, y, c=c, s=50, cmap=discrete_cmap(N, 'cubehelix'))
+        plt.colorbar(ticks=range(N))
+        plt.clim(-0.5, N - 0.5)
+        plt.show()
+    """
+
+    # Note that if base_cmap is a string or None, you can simply do
+    #    return plt.cm.get_cmap(base_cmap, N)
+    # The following works for string, None, or a colormap instance:
+
+    base = plt.cm.get_cmap(base_cmap)
+    color_list = base(np.linspace(0, 1, N))
+    cmap_name = base.name + str(N)
+    return base.from_list(cmap_name, color_list, N)
+
+
 def mpl_colors(cmap=None, N=None):
     """Return a list of RGB values.
     Parameters:
@@ -557,6 +583,7 @@ def rgb2hex(r,g,b):
     b = int(b)
     return '#%02x%02x%02x' % (r, g, b)
 
+
 def getColor(position,rng,col1,col2):
     """
     Computes a hex value matching up with the current position relative to the range of colors.
@@ -686,3 +713,4 @@ def list_by_values(*args):
             
     #Return the list of colors
     return colors
+
