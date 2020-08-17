@@ -55,9 +55,7 @@ def crsmask(ax, conf, crs, shpfile=None, region='China',
                     if country.attributes['CNTRY_NAME'] == region]
                         
     main_geom = sorted(multipoly.geoms, key=lambda geom: geom.area)[-1]
-
     path, = geos_to_path(main_geom)
-
     plate_carre_data_transform = crs._as_mpl_transform(ax)
 
     for collection in conf.collections:

@@ -7,6 +7,7 @@
 Utilities for use in making plots.
 """
 
+import os
 import itertools
 import string
 from datetime import datetime, timedelta
@@ -90,7 +91,7 @@ def add_logo(fig, x=10, y=10, zorder=100,
     fname_prefix = {'nmc': 'nmc', 'cma': 'cma'}
     try:
         fname = fname_prefix[which] + fname_suffix[size]
-        fpath = "resources/logo/" + fname
+        fpath = os.path.join("resources/logo/", fname)
     except KeyError:
         raise ValueError('Unknown logo size or selection')
 
