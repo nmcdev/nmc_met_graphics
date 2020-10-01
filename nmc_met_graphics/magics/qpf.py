@@ -30,8 +30,7 @@ def draw_qpf(prep, lon, lat, mslp=None, map_region=None, atime=24,
 
     # put data into fields
     prep_field = util.minput_2d(prep, lon, lat, {'long_name': 'precipitation', 'units': 'mm'}, map_region=map_region)
-    if mslp is not None:
-        mslp_field = util.minput_2d(mslp, lon, lat, {'long_name': 'height', 'units': 'gpm'}, map_region=map_region)
+    mslp_field = util.minput_2d(mslp, lon, lat, {'long_name': 'height', 'units': 'gpm'}, map_region=map_region)
 
     #
     # set up visual parameters
@@ -89,7 +88,7 @@ def draw_qpf(prep, lon, lat, mslp=None, map_region=None, atime=24,
     plots.extend([prep_field, prep_contour])
 
     # Define the simple contouring for gh
-    if mslp is not None:
+    if mslp_field is not None:
         mslp_contour = common._get_mslp_contour()
         plots.extend([mslp_field, mslp_contour])
 

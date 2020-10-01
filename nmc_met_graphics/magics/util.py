@@ -95,6 +95,10 @@ def minput_2d(data, lon, lat, metadata, map_region=None):
         map_region (list, optional): if set, the data will fit to the map_region. 
                                      [lonmin, lonmax, latmin, latmax]
     """
+
+    # check data
+    if data is None:
+        return None
     
     lat = np.squeeze(lat.astype(np.float64))
     lon = np.squeeze(lon.astype(np.float64))
@@ -132,6 +136,10 @@ def minput_2d_vector(udata, vdata, lon, lat, skip=1, metadata=None, map_region=N
         map_region (list, optional): if set, the data will fit to the map_region. 
                                      [lonmin, lonmax, latmin, latmax]
     """
+
+    # check data
+    if udata is None or vdata is None:
+        return None
 
     # extract values
     lat = np.squeeze(lat.astype(np.float64))    # 1D vector

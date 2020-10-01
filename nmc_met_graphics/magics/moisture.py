@@ -38,8 +38,7 @@ def draw_rh_high(uwind, vwind, rh, lon, lat, gh=None, skip_vector=None,
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
     rh_field = util.minput_2d(rh, lon, lat, {'long_name': 'Relative Humidity', 'units': '%'})
-    if gh is not None:
-        gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
+    gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
 
     #
     # set up visual parameters
@@ -136,8 +135,7 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
     # put data into fields
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
     sp_field = util.minput_2d(sp, lon, lat, {'long_name': 'Specific humidity', 'units': 'g kg^-1'})
-    if gh is not None:
-        gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
+    gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
 
     #
     # set up visual parameters
@@ -186,7 +184,7 @@ def draw_sp_high(uwind, vwind, sp, lon, lat, gh=None, skip_vector=None,
     plots.extend([wind_field, wind_vector])
 
     # Define the simple contouring for gh
-    if gh is not None:
+    if gh_field is not None:
         gh_contour = common._get_gh_contour()
         plots.extend([gh_field, gh_contour])
 
@@ -223,8 +221,7 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
 
     # put data into fields
     pwat_field = util.minput_2d(pwat, lon, lat, {'long_name': 'precipitable water', 'units': 'mm'})
-    if gh is not None:
-        gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
+    gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
 
     #
     # set up visual parameters
@@ -270,7 +267,7 @@ def draw_pwat(pwat, lon, lat, gh=None, map_region=None,
     plots.extend([pwat_field, pwat_contour])
 
     # Define the simple contouring for gh
-    if gh is not None:
+    if gh_field is not None:
         gh_contour = common._get_gh_contour()
         plots.extend([gh_field, gh_contour])
 
@@ -316,9 +313,8 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
     ivt_mag_field = util.minput_2d(
         np.sqrt(iqu*iqu + iqv*iqv), lon, lat, 
         {'long_name': 'Integrated Water Vapor Transport', 'units': 'kg/m/s'})
-    if mslp is not None:
-        mslp_field = util.minput_2d(
-            mslp, lon, lat, {'long_name': 'mean sea level pressure', 'units': 'mb'})
+    mslp_field = util.minput_2d(
+        mslp, lon, lat, {'long_name': 'mean sea level pressure', 'units': 'mb'})
 
     #
     # set up visual parameters
@@ -375,7 +371,7 @@ def draw_ivt(iqu, iqv, lon, lat, mslp=None, skip_vector=None,
         plots.extend([ivt_field, ivt_vector])
 
     # Define the simple contouring for gh
-    if mslp is not None:
+    if mslp_field is not None:
         interval = check_region_to_contour(map_region, 4, 2, thred=600)
         mslp_contour = common._get_mslp_contour(interval=interval)
         plots.extend([mslp_field, mslp_contour])

@@ -12,7 +12,8 @@ import numpy as np
 from Magics import macro as magics
 
 
-def _get_title(head=None, name='', time=None, fhour=None, tzone='UTC'):
+def _get_title(head=None, name='', time=None, fhour=None,
+               fhour_range=None, tzone='UTC', fontsize=1):
     """
     Construct the title string for magics.
 
@@ -31,9 +32,9 @@ def _get_title(head=None, name='', time=None, fhour=None, tzone='UTC'):
     if head is not None:
         text_lines.append(
             """
-            <font size='1'><b>{} </b></font>
-            <font size='1'>{}</font>
-            """.format(name, head))
+            <font size='{fontsize}'><b>{name} </b></font>
+            <font size='{fontsize}'>{head}</font>
+            """.format(name=name, head=head, fontsize=str(fontsize)))
     
     # the model time stamp
     if time is not None:
@@ -45,16 +46,35 @@ def _get_title(head=None, name='', time=None, fhour=None, tzone='UTC'):
             validtime = time + datetime.timedelta(hours = fhour)
             text_lines.append(
                 """
-                <font size='0.8' colour='black'>Init: {}({}) -- </font>
-                <font size='0.8' colour='red'><b>[{}]</b></font>
-                <font size='0.8' colour='black'> --> Valid: </font>
-                <font size='0.8' colour='blue'><b>{}({})</b></font>
+                <font size='{fontsize}' colour='black'>Init: {time}({tzone}) -- </font>
+                <font size='{fontsize}' colour='red'><b>[{fhour}]</b></font>
+                <font size='{fontsize}' colour='black'> --> Valid: </font>
+                <font size='{fontsize}' colour='blue'><b>{validtime}({tzone})</b></font>
                 """.format(
-                    time.strftime("%Y/%m/%d %H:%M"), tzone, str(int(fhour)).zfill(3),
-                    validtime.strftime("%Y/%m/%d %H:%M"), tzone))
+                    time=time.strftime("%Y/%m/%d %H:%M"), tzone=tzone,
+                    fhour=str(int(fhour)).zfill(3), fontsize=str(fontsize*0.8),
+                    validtime=validtime.strftime("%Y/%m/%d %H:%M")))
         else:
-            text_lines.append("<font size='0.8' colour='red'>{}({})</font>".format(
-                time.strftime("%Y/%m/%d %H:%M"), tzone))
+            if fhour_range is not None:
+                validtime1 = time + datetime.timedelta(hours = fhour_range[0])
+                validtime2 = time + datetime.timedelta(hours = fhour_range[1])
+                text_lines.append(
+                    """
+                    <font size='{fontsize}' colour='black'>Init: {time}({tzone}) -- </font>
+                    <font size='{fontsize}' colour='red'><b>[{fhour}]</b></font>
+                    <font size='{fontsize}' colour='black'> --> Valid: </font>
+                    <font size='{fontsize}' colour='blue'><b>{validtime1}({tzone})</b></font>
+                    <font size='{fontsize}' colour='black'> to </font>
+                    <font size='{fontsize}' colour='blue'><b>{validtime2}({tzone})</b></font>
+                    """.format(
+                        time=time.strftime("%Y/%m/%d %H:%M"), tzone=tzone,
+                        fhour=str(int(fhour_range[0])).zfill(3)+'-'+str(int(fhour_range[1])).zfill(3),
+                        fontsize=str(fontsize*0.8),
+                        validtime1=validtime1.strftime("%Y/%m/%d %H:%M"),
+                        validtime2=validtime2.strftime("%Y/%m/%d %H:%M")))
+            else:
+                text_lines.append("<font size='{fontsize}' colour='red'>{time}({tzone})</font>".format(
+                    time=time.strftime("%Y/%m/%d %H:%M"), tzone=tzone, fontsize=str(fontsize*0.8)))
     else:
         text_lines.append(" ")
     

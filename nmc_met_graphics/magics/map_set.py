@@ -71,7 +71,7 @@ def get_mmap(name='CHINA_LAND_CYLINDRICAL', **kwargs):
     kwargs = check_kwargs(kwargs, 'page_id_line', 'off')
 
     if name.upper() == 'CHINA_CYLINDRICAL':                                                  # 中国陆地和海洋范围
-        map_region = [70.0, 140.0, 8.0, 160.0]
+        map_region = [70.0, 140.0, 8.0, 60.0]
         kwargs = get_page_setup(kwargs, map_region=map_region)
         kwargs['subpage_lower_left_longitude'] = map_region[0]
         kwargs['subpage_upper_right_longitude'] = map_region[1]

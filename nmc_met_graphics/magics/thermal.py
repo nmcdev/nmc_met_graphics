@@ -30,8 +30,7 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
 
     # put data into fields
     temp_field = util.minput_2d(temp, lon, lat, {'long_name': 'Temperature', 'units': 'degree'})
-    if gh is not None:
-        gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
+    gh_field = util.minput_2d(gh, lon, lat, {'long_name': 'height', 'units': 'gpm'})
 
     #
     # set up visual parameters
@@ -84,7 +83,7 @@ def draw_temp_high(temp, lon, lat, gh=None, map_region=None,
     plots.extend([temp_field, temp_contour_zero])
 
     # Define the simple contouring for gh
-    if gh is not None:
+    if gh_field is not None:
         gh_contour = common._get_gh_contour()
         plots.extend([gh_field, gh_contour])
 
