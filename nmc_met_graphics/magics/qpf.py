@@ -10,7 +10,7 @@ Quatitative precipitation forecast.
 import numpy as np
 import xarray as xr
 from nmc_met_graphics.magics import util, map_set, common
-from nmc_met_graphics.util import check_region_to_contour, check_kwargs
+from nmc_met_graphics.util import check_kwargs
 from Magics import macro as magics
 
 
@@ -30,12 +30,11 @@ def draw_qpf(prep, lon, lat, mslp=None, map_region=None, atime=24,
 
     # put data into fields
     prep_field = util.minput_2d(prep, lon, lat, {'long_name': 'precipitation', 'units': 'mm'}, map_region=map_region)
-    mslp_field = util.minput_2d(mslp, lon, lat, {'long_name': 'height', 'units': 'gpm'}, map_region=map_region)
+    mslp_field = util.minput_2d(mslp, lon, lat, {'long_name': 'height', 'units': 'hPa'}, map_region=map_region)
 
     #
     # set up visual parameters
     #
-
     plots = []
 
     # Setting the coordinates of the geographical area
