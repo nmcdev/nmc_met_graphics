@@ -100,10 +100,17 @@ def minput_2d(data, lon, lat, metadata, map_region=None):
     if data is None:
         return None
     
+    # prepare the data
     lat = np.squeeze(lat.astype(np.float64))
     lon = np.squeeze(lon.astype(np.float64))
     input_field_values = np.squeeze(data.astype(np.float64))
 
+    # check the latitude order (must be ascent for Magics plot)
+    if lat[0] > lat[1]:
+        lat = lat[::-1]
+        input_field_values = input_field_values[::-1, :]
+
+    # cut the map region
     if map_region is not None:
         loni, lonj, lati, latj = grid_subset(lon, lat, map_region)
         lon = lon[loni:lonj]
@@ -146,6 +153,14 @@ def minput_2d_vector(udata, vdata, lon, lat, skip=1, metadata=None, map_region=N
     lon = np.squeeze(lon.astype(np.float64))    # 1D vector
     uwind_field = np.squeeze(udata.astype(np.float64))    # 2D array, [nlat, nlon]
     vwind_field = np.squeeze(vdata.astype(np.float64))    # 2D array, [nlat, nlon]
+
+    # check the latitude order (must be ascent for Magics plot)
+    if lat[0] > lat[1]:
+        lat = lat[::-1]
+        uwind_field = uwind_field[::-1, :]
+        vwind_field = vwind_field[::-1, :]
+
+    # cut the data region
     if map_region is not None:
         loni, lonj, lati, latj = grid_subset(lon, lat, map_region)
         lon = lon[loni:lonj]
@@ -201,6 +216,7 @@ def minput_xarray(data, varname='data', metadata=None):
       dataset = get_model_grid("ECMWF_HR/TMP/850", varattrs={'units':'C', 'long_name':'temperature'})
       data = minput_grid(dataset)
   """
+
   # flatten an nD matrix into a 2d matrix
   for dim in data.dims:
     if dim in ['lon', 'lat']:
@@ -227,7 +243,7 @@ def minput_xarray(data, varname='data', metadata=None):
 
 
 def minput_xarray_vector(uwind, vwind, u_varname='data', v_varname='data', skip=1,
-                       metadata={'units': 'm/s', 'long_name': 'Wind field'}):
+                         metadata={'units': 'm/s', 'long_name': 'Wind field'}):
   """
   Put u and v xarray grid into magics minput data.
   refer to: https://github.com/ecmwf/magics-python/blob/master/Magics/macro.py
@@ -255,8 +271,8 @@ def minput_xarray_vector(uwind, vwind, u_varname='data', v_varname='data', skip=
   # extract values
   lat = uwind['lat'].values.astype(np.float64)    # 1D vector
   lon = uwind['lon'].values.astype(np.float64)    # 1D vector
-  uwind_field = np.squeeze(uwind['u_varname'].values.astype(np.float64))    # 2D array, [nlat, nlon]
-  vwind_field = np.squeeze(vwind['v_varname'].values.astype(np.float64))    # 2D array, [nlat, nlon]
+  uwind_field = np.squeeze(uwind[u_varname].values.astype(np.float64))    # 2D array, [nlat, nlon]
+  vwind_field = np.squeeze(vwind[v_varname].values.astype(np.float64))    # 2D array, [nlat, nlon]
   lon, lat = np.meshgrid(lon, lat)
 
   # skip values and flatten

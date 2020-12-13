@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm
 from matplotlib import colors
 from matplotlib.colors import ListedColormap, to_rgb, LinearSegmentedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from nmc_met_graphics.cmap.cpt import gmtColormap_openfile
 
 
@@ -713,4 +714,20 @@ def list_by_values(*args):
             
     #Return the list of colors
     return colors
+
+
+def colorbar(mappable):
+    """
+    Fix the maplotlib colorbar position.
+    refer to https://joseph-long.com/writing/colorbars/?s=09
+
+    """
+    last_axes = plt.gca()
+    ax = mappable.axes
+    fig = ax.figure
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = fig.colorbar(mappable, cax=cax)
+    plt.sca(last_axes)
+    return cbar
 
