@@ -10,7 +10,7 @@ Only Python 3 is supported.
 
 Using the fellowing command to install packages:
 
-* 预安装程序库
+* 预安装程序库  
 ```
   conda install -c conda-forge cartopy
 ```
