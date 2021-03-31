@@ -782,6 +782,7 @@ class BaseMap():
             box_alignment=box_alignment, pad=0, frameon=False)
         return ax.add_artist(ab)
 
+
     def title(self, ax=None, left_title=None, center_title=None,
               right_title=None, font_size=18, family='Microsoft YaHei'):
         """

@@ -340,7 +340,7 @@ def draw_vort_high(uwind, vwind, lon, lat, vort=None, gh=None, skip_vector=None,
     wind_field = util.minput_2d_vector(uwind, vwind, lon, lat, skip=skip_vector)
     if vort is None:
         dx, dy = calc.lat_lon_grid_deltas(lon, lat)
-        vort = calc.vorticity(uwind * units.meter/units.second, vwind * units.meter/units.second, dx, dy)
+        vort = calc.vorticity(uwind * units.meter/units.second, vwind * units.meter/units.second, dx=dx, dy=dy)
         vort = ndimage.gaussian_filter(vort,sigma=smooth_factor, order=0)* 10**5
     vort_field = util.minput_2d(vort, lon, lat, {'long_name': 'vorticity', 'units': 's-1'})
     if gh is not None:
