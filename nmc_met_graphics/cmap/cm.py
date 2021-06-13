@@ -17,6 +17,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.cm
+import matplotlib.colorbar as mcbar
 from matplotlib import colors
 from matplotlib.colors import ListedColormap, to_rgb, LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -716,7 +717,7 @@ def list_by_values(*args):
     return colors
 
 
-def colorbar(mappable):
+def colorbar(mappable, **kargs):
     """
     Fix the maplotlib colorbar position.
     refer to https://joseph-long.com/writing/colorbars/?s=09
@@ -727,7 +728,51 @@ def colorbar(mappable):
     fig = ax.figure
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    cbar = fig.colorbar(mappable, cax=cax)
+    cbar = fig.colorbar(mappable, cax=cax, **kargs)
     plt.sca(last_axes)
     return cbar
+
+
+def getColorbarPad(ax, orientation, base_pad=0.0):
+    '''Compute padding value for colorbar axis creation
+    refer to:
+      https://numbersmithy.com/how-to-programmatically-set-the-padding-for-matplotlib-colobar-axis/
+
+    Args:
+        ax (Axis obj): axis object used as the parent axis to create colorbar.
+        orientation (str): 'horizontal' or 'vertical'.
+    Keyword Args:
+        base_pad (float): default pad. The resultant pad value is the computed
+            space + base_pad.
+    Returns:
+        pad (float): the pad argument passed to make_axes_gridspec() function.
+    '''
+    # store axis aspect
+    aspect = ax.get_aspect()
+
+    # temporally set aspect to 'auto'
+    ax.set_aspect('auto')
+
+    # get renderer
+    renderer = ax.get_figure().canvas.get_renderer()
+
+    # get the bounding box of the main plotting area of axis
+    b1 = ax.patch.get_extents()
+
+    # get the bounding box the axis
+    b2 = ax.get_tightbbox(renderer)
+    if orientation == 'horizontal':
+        # use the y-coordinate difference as the required pad, plus a base-pad
+        bbox = ax.transAxes.inverted().transform([b1.p0, b2.p0])
+        print(bbox)
+        pad = abs(bbox[0]-bbox[1])[1] + base_pad
+    elif orientation == 'vertical':
+        # use the x-coordinate difference as the required pad, plus a base-pad
+        bbox = ax.transAxes.inverted().transform([b1.p1, b2.p1])
+        pad = abs(bbox[0]-bbox[1])[0] + base_pad
+
+    # restore previous aspect
+    ax.set_aspect(aspect)
+    
+    return pad
 
