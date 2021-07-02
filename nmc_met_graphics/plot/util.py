@@ -422,7 +422,7 @@ def add_mslp_label(ax, proj_ccrs, mslp, lat, lon):
         return np.nonzero(mat == mn), np.nonzero(mat == mx)
     
     #Determine an appropriate window given the lat/lon grid resolution
-    res = lat[1] - lat[0]
+    res = np.abs(lat[1] - lat[0])
     nwindow = int(9.5 / res)
     mslp = np.ma.masked_invalid(mslp)
     local_min, local_max = _extrema(mslp, mode='wrap', window=nwindow)
