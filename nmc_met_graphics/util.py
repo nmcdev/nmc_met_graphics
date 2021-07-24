@@ -7,7 +7,10 @@
 Some Utility functions.
 """
 
+
 import math
+import numpy as np
+
 
 def check_kwargs(kwargs, key, default):
     """
@@ -39,7 +42,8 @@ def get_map_regions():
         '东北': [103, 140, 32, 58], '华东': [107, 130, 20, 41],
         '华中': [100, 123, 22, 42], '华南': [100, 126, 12, 30],
         '西南': [90, 113, 18, 38], '西北': [89, 115, 27, 47],
-        '新疆': [70, 101, 30, 52], '青藏': [68, 105, 18, 46]}
+        '新疆': [70, 101, 30, 52], '青藏': [68, 105, 18, 46],
+        '河南': [109.8, 117.8, 31, 37.4]}
     return map_region
 
 
@@ -113,3 +117,18 @@ def check_region_to_contour(map_region, cnt1, cnt2, thred=600):
         return cnt1
     else:
         return cnt2
+
+
+class PlotAttrs:
+    """
+    Predefined plot's attributes for meteorological variables.
+    """
+    
+    @staticmethod
+    def get_gh_contours():
+        # common levels
+        levels = np.concatenate((np.arange(480, 580, 4), np.arange(580, 604, 4)))
+        linewidths = np.full(len(levels), 1)
+        linewidths[levels == 588] = 2
+
+        return {"levels":levels, "linewidths":linewidths}

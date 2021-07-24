@@ -473,3 +473,4 @@ def add_mslp_label(ax, proj_ccrs, mslp, lat, lon):
                        mpatheffects.SimpleLineShadow(),mpatheffects.Normal()])
                 xyplotted.append((x,y))
 
+

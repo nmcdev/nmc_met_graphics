@@ -14,7 +14,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from nmc_met_graphics.cmap.ctables import cm_temperature_nws, cm_precipitation_nws
-from nmc_met_graphics.plot.china_map import add_china_map_2cartopy
+from nmc_met_graphics.plot.mapview import add_china_map_2cartopy
 from nmc_met_graphics.plot.util import add_gridlines
 
 

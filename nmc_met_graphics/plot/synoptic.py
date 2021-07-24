@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-from nmc_met_graphics.plot.china_map import add_china_map_2cartopy
+from nmc_met_graphics.plot.mapview import add_china_map_2cartopy
 from nmc_met_graphics.cmap.cm import guide_cmaps
 
 

@@ -19,7 +19,7 @@ from matplotlib.transforms import offset_copy
 import cartopy.crs as ccrs
 import cartopy.io.img_tiles as cimg
 from nmc_met_graphics.cmap.ctables import cm_precipitation_nws
-from nmc_met_graphics.plot.china_map import add_china_map_2cartopy
+from nmc_met_graphics.plot.mapview import add_china_map_2cartopy
 from nmc_met_graphics.plot.util import add_gridlines
 
 
