@@ -17,13 +17,13 @@ import scipy.ndimage as ndimage
 import pandas as pd
 from PIL import Image
 import matplotlib.pyplot as plt
-import matplotlib.colors as col
 import matplotlib.patheffects as path_effects
 from matplotlib.path import Path
+from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon, PathPatch
 from matplotlib.font_manager import FontProperties
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
-from matplotlib.transforms import Transform, offset_copy
+from matplotlib.transforms import offset_copy
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import shapefile
@@ -35,6 +35,7 @@ from cartopy.mpl.patch import geos_to_path
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 from nmc_met_graphics.util import get_map_region
+import nmc_met_graphics.cmap as nmgcmap
 
 
 def add_china_map_2basemap(mp, ax, name='province', facecolor='none',
@@ -149,6 +150,7 @@ class BaseMap():
         self.proj = getattr(ccrs, projection)(**kwargs)
         self.ax = ax
         self.res = res
+        self.extent = None
 
     def _check_ax(self):
         """
@@ -233,8 +235,8 @@ class BaseMap():
         ax = ax or self._check_ax()
 
         #Set map extend
-        map_region = get_map_region(region)
-        ax.set_extent(map_region, crs=ccrs.PlateCarree())
+        self.extent = get_map_region(region)
+        ax.set_extent(self.extent, crs=ccrs.PlateCarree())
     
     def drawcoastlines(self,linewidths=1.2,linestyle='solid',
                        color='k',res=None,ax=None,**kwargs):
@@ -272,7 +274,8 @@ class BaseMap():
         #Return value
         return coastlines
     
-    def drawcountries(self,linewidths=1.2,linestyle='solid',color='k',res=None,ax=None,**kwargs):
+    def drawcountries(self,linewidths=1.2,linestyle='solid',color='k',
+                      res=None,ax=None,**kwargs):
         """
         Draws country borders similarly to Basemap's m.drawcountries() function.
         
@@ -307,7 +310,8 @@ class BaseMap():
         #Return value
         return countries
 
-    def drawnation(self,linewidths=1.0,linestyle='solid',color='k',facecolor='none',ax=None,**kwargs):
+    def drawnation(self,linewidths=1.0,linestyle='solid',color='k',
+                   facecolor='none',ax=None,**kwargs):
         """
         Draws china nation borders.
         
@@ -341,7 +345,8 @@ class BaseMap():
         #Return value
         return states
     
-    def drawstates(self,linewidths=0.7,linestyle='solid',color='k',facecolor='none',ax=None,**kwargs):
+    def drawstates(self,linewidths=0.7,linestyle='solid',color='k',
+                   facecolor='none',ax=None,**kwargs):
         """
         Draws state borders similarly to Basemap's m.drawstates() function.
         
@@ -410,7 +415,8 @@ class BaseMap():
         #Return value
         return counties
 
-    def drawrivers(self,linewidths=0.8,linestyle='solid',color='blue',facecolor='none',ax=None,**kwargs):
+    def drawrivers(self,linewidths=0.8,linestyle='solid',color='blue',
+                   facecolor='none',ax=None,**kwargs):
         """
         Draws counties borders similarly to Basemap's m.drawcounties() function.
         
@@ -957,42 +963,74 @@ class BaseMap():
                 path_effects=[path_effects.withStroke(linewidth=4, foreground ="w")],
                 **kwargs)
  
-    def cities(self, ax=None, city_type='capital', color='white',
-               foreground='black', font_size=18):
+    def cities(self, ax=None, city_type='capital', color_style='black', 
+               marker_size=5, font_size=16):
         """
         Draw city texts.
 
         Args:
             ax (object, optional): Axes instance, if not None then overrides the default axes instance.
-            city_type (str, optional): [description]. Defaults to 'capital'.
-            color (str, optional): [description]. Defaults to 'white'.
-            foreground (str, optional): [description]. Defaults to 'black'.
-            font_size (int, optional): [description]. Defaults to 18.
+            city_type (str, optional): the type name of city information. Defaults to 'capital'.
+            color_style (str, optional): color style for city label. Defaults to 'white'.
+            marker_size (int, optional): markder size. Defaults to 8.
+            font_size (int, optional): font size. Defaults to 18.
         """
 
         #Get current axes if not specified
         ax = ax or self._check_ax()
 
-        if city_type.upper() == "CAPITAL":
+        # check style
+        color_style = color_style.lower()
+        if color_style == 'white':
+            color = 'white'; foreground = 'black'; markcolor = 'white'
+        elif color_style == 'black':
+            color = 'black'; foreground = 'white'; markcolor = 'black'
+        else:
+            color = 'white'; foreground = 'black'; markcolor = 'white'
+            
+        # get station information
+        city_type = city_type.lower()
+        if city_type == "capital":        # 省会城市
             cities = pd.read_csv(pkg_resources.resource_filename(
                 'nmc_met_graphics', "resources/stations/provincial_capital.csv"))
-        else:
+        elif city_type == 'base_station': # 260个基本站点信息
             cities = pd.read_csv(pkg_resources.resource_filename(
                 'nmc_met_graphics', "resources/stations/cma_city_station_info.dat"),  delimiter=r"\s+")
+        elif city_type == 'station':      # 2420个基本站点信息
+            cities = pd.read_csv(pkg_resources.resource_filename(
+                'nmc_met_graphics', "resources/stations/cma_national_station_info.dat"),  delimiter=r"\s+")
+        elif city_type == 'adcode':       # 3555个中国行政区划代码
+            cities = pd.read_csv(pkg_resources.resource_filename(
+                'nmc_met_graphics', "resources/stations/adcode-release-20191218.csv"))
+        elif city_type == 'world':        # 154个全球站点信息
+            cities = pd.read_csv(pkg_resources.resource_filename(
+                'nmc_met_graphics', "resources/stations/cma_world_city_station_info.dat"),  delimiter=r"\s+")
+        else:
+            raise ValueError('Improper city_type entered.')
 
+        # extract subregion
+        if self.extent is not None:
+            limit = self.extent
+            cities = cities[(limit[2] <= cities['lat']) & (cities['lat'] <= limit[3]) &
+                            (limit[0] <= cities['lon']) & (cities['lon'] <= limit[1])]
+        if len(cities) == 0:
+            return
+
+        # draw station information
         font = FontProperties(family='SimHei', size=font_size, weight='bold')
         geodetic_transform = ccrs.Geodetic()._as_mpl_transform(ax)
         for _, row in cities.iterrows():
             text_transform = offset_copy(geodetic_transform, units='dots', x=-5)
-            ax.plot(row['lon'], row['lat'], marker='o', color='white', markersize=8,
-                    alpha=0.7, transform=ccrs.PlateCarree())
+            ax.plot(row['lon'], row['lat'], marker='s', color=markcolor, 
+                    markersize=marker_size, alpha=0.7, transform=ccrs.PlateCarree())
             ax.text(row['lon'], row['lat'], row['city_name'], clip_on=True,
                     verticalalignment='center', horizontalalignment='right',
                     transform=text_transform, fontproperties=font, color=color,
-                    path_effects=[path_effects.Stroke(linewidth=1, foreground=foreground),path_effects.Normal()])
+                    path_effects=[path_effects.Stroke(linewidth=1, foreground=foreground),
+                    path_effects.Normal()])
 
-    def colorbar(self,mappable=None,location='right',size="2.5%",pad='1%',
-                 labelsize=13,linewidth=2,format=label_fmt,fig=None,ax=None,**kwargs):
+    def colorbar(self,mappable=None,ax_cb=None, location='right',size="2.5%",pad='1%',
+                 label_size=13,label_fmt=label_fmt,fig=None,ax=None,**kwargs):
         """
         Uses the axes_grid toolkit to add a colorbar to the parent axis and rescale its size to match
         that of the parent axis, similarly to Basemap's functionality.
@@ -1002,6 +1040,8 @@ class BaseMap():
         mappable
             The image mappable to which the colorbar applies. If none specified, matplotlib.pyplot.gci() is
             used to retrieve the latest mappable.
+        ax_cb
+            Given the colorbar axes, will ignore the location parameter.
         location
             Location in which to place the colorbar ('right','left','top','bottom'). Default is right.
         size
@@ -1026,31 +1066,110 @@ class BaseMap():
             mappable = plt.gci()
         
         #Create axis to insert colorbar in
-        divider = make_axes_locatable(ax)
-        
-        if location == "left":
-            orientation = 'vertical'
-            ax_cb = divider.new_horizontal(size, pad, pack_start=True, axes_class=plt.Axes)
-        elif location == "right":
-            orientation = 'vertical'
-            ax_cb = divider.new_horizontal(size, pad, pack_start=False, axes_class=plt.Axes)
-        elif location == "bottom":
-            orientation = 'horizontal'
-            ax_cb = divider.new_vertical(size, pad, pack_start=True, axes_class=plt.Axes)
-        elif location == "top":
-            orientation = 'horizontal'
-            ax_cb = divider.new_vertical(size, pad, pack_start=False, axes_class=plt.Axes)
-        else:
-            raise ValueError('Improper location entered')
+        if ax_cb is None:
+            divider = make_axes_locatable(ax)
+            if location == "left":
+                orientation = 'vertical'
+                ax_cb = divider.new_horizontal(size, pad, pack_start=True, axes_class=plt.Axes)
+            elif location == "right":
+                orientation = 'vertical'
+                ax_cb = divider.new_horizontal(size, pad, pack_start=False, axes_class=plt.Axes)
+            elif location == "bottom":
+                orientation = 'horizontal'
+                ax_cb = divider.new_vertical(size, pad, pack_start=True, axes_class=plt.Axes)
+            elif location == "top":
+                orientation = 'horizontal'
+                ax_cb = divider.new_vertical(size, pad, pack_start=False, axes_class=plt.Axes)
+            else:
+                raise ValueError('Improper location entered')
         
         #Create colorbar
         fig.add_axes(ax_cb)
         cb = plt.colorbar(mappable, orientation=orientation, cax=ax_cb, **kwargs)
-        cb.ax.tick_params(labelsize=labelsize, grid_linewidth=linewidth, width=linewidth)
+        for l in cb.ax.yaxis.get_ticklabels():
+            l.set_weight("bold")
+            l.set_fontsize(label_size)
+        cb.ax.set_yticklabels([label_fmt(i) for i in cb.get_ticks()])
         
         #Reset parent axis as the current axis
         fig.sca(ax)
         return cb
+
+    def markers(self,lon,lat,values,clevs,ax=None,transform=None,
+                markers='o', colors=None, sizes=12, alpha=0.8,
+                edgecolors='black', linewidths=0.3, 
+                legend_loc='lower left', legend_fontsize=14,
+                legend_title='', **kwargs):
+        """
+        Plot point markers for different levels with colors, sizes and so on.
+
+        Args:
+            lon ([type]): [description]
+            lat ([type]): [description]
+            values ([type]): [description]
+            clevs ([type]): [description]
+            ax ([type], optional): [description]. Defaults to None.
+            transform ([type], optional): [description]. Defaults to None.
+            markers (str, optional): [description]. Defaults to 'o'.
+            colors ([type], optional): [description]. Defaults to None.
+            sizes (int, optional): [description]. Defaults to 12.
+            alpha (float, optional): [description]. Defaults to 0.8.
+            edgecolors (str, optional): [description]. Defaults to 'black'.
+            linewidths (float, optional): [description]. Defaults to 0.3.
+        """
+
+        #Get current axes if not specified
+        ax = ax or self._check_ax()
+        
+        #Check transform if not specified
+        if transform is None: transform = ccrs.PlateCarree()
+
+        #Create dataframe
+        data = pd.DataFrame({'lon':lon,'lat':lat,'values':values})
+
+        #Check graphic parameters
+        nlevs = len(clevs)
+        if len(markers) == 1:
+            markers = [markers for lev in clevs]
+        if not hasattr(sizes, '__len__'):
+            sizes   = [sizes for lev in clevs]
+        if not hasattr(alpha, '__len__'):
+            alpha   = [alpha for lev in clevs]
+        if colors is None:
+            colors  = nmgcmap.cm.get_colors_from_cmap(nmgcmap.cm.guide_cmaps('2'), nlevs)
+        if len(colors) == 1:
+            colors  = [colors for lev in clevs]
+
+        #Loop every levels
+        legend_elements = []
+        for ilev, lev in enumerate(clevs):
+            if ilev == len(clevs)-1:
+                temp = data[(data['values'] >= clevs[ilev])]
+                label = label_fmt(lev)+'~Inf'
+            else:
+                temp = data[(data['values'] >= clevs[ilev]) & (data['values'] < clevs[ilev+1])]
+                label = label_fmt(clevs[ilev])+'~'+label_fmt(clevs[ilev+1])
+            
+            # append legend
+            legend_elements.append(
+                Line2D([0], [0], marker=markers[ilev], color='w', label=label,
+                       markerfacecolor=colors[ilev], markersize=15))
+            
+            # check data
+            if len(temp) == 0:
+                continue
+
+            # draw data symbols
+            ax.scatter(temp['lon'], temp['lat'], marker=markers[ilev],color=colors[ilev],
+                       s=sizes[ilev], alpha=alpha[ilev], edgecolors=edgecolors,
+                       linewidths=linewidths, transform=transform, **kwargs)
+
+        # add legend
+        font = FontProperties(family='sans-serif', size=legend_fontsize, weight='bold')
+        lg = ax.legend(handles=legend_elements, loc=legend_loc, prop=font)
+        font = FontProperties(family='SimHei', size=legend_fontsize*1.2)
+        lg.set_title(legend_title, prop=font)
+
 
     def pcolormesh(self,lon,lat,data,*args,ax=None,transform=None,
                    sigma=None, **kwargs):
@@ -1078,6 +1197,29 @@ class BaseMap():
         #draw pcolormesh
         pcm = ax.pcolormesh(lon,lat,data,*args,transform=transform, **kwargs)
         return pcm
+
+    def imshow(self, data, *args,ax=None,transform=None,
+               sigma=None, **kwargs):
+        """
+        Wrapper to matplotlib's imshow function. Coordinates are set by 
+        extent (left, right, bottom, top). Default data projection is 
+        ccrs.PlateCarree() unless a different data projection is passed.
+        """
+
+        #Get current axes if not specified
+        ax = ax or self._check_ax()
+        
+        #Check transform if not specified
+        if transform is None: transform = ccrs.PlateCarree()
+
+        #smooth the 2D filed if sigma set.
+        data = np.squeeze(data)
+        if sigma is not None:
+            data = ndimage.gaussian_filter(data, sigma=sigma,order=0)
+        
+        #Fill contour data
+        cs = ax.imshow(data, *args, transform=transform, **kwargs)
+        return cs
 
     def contourf(self,lon,lat,data,*args,ax=None,transform=None,
                  sigma=None, **kwargs):
@@ -1107,7 +1249,7 @@ class BaseMap():
         return cs
     
     def contour(self,lon,lat,data,*args,ax=None,transform=None,sigma=None,
-                label=True, labelsize=12, labelfmt=label_fmt, **kwargs):
+                label=True, label_size=12, label_fmt=label_fmt, **kwargs):
         """
         Wrapper to matplotlib's contour function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1133,7 +1275,7 @@ class BaseMap():
         cs = ax.contour(lon,lat,data,*args,transform=transform,**kwargs)
         if label:
             ax.clabel(cs, cs.levels, inline=True, inline_spacing=1, 
-                      fmt=labelfmt, fontsize=labelsize, rightside_up=True)
+                      fmt=label_fmt, fontsize=label_size, rightside_up=True)
         return cs
     
     def barbs(self,lon,lat,u,v,*args,ax=None,transform=None,**kwargs):

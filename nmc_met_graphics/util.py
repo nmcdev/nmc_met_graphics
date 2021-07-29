@@ -8,8 +8,12 @@ Some Utility functions.
 """
 
 
-import math
+from datetime import datetime
 import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+from nmc_met_graphics.cmap import cm
 
 
 def check_kwargs(kwargs, key, default):
@@ -28,22 +32,75 @@ def check_kwargs(kwargs, key, default):
     return kwargs
 
 
+def check_initTime(initTime):
+    """
+    Check the initTime format, return a datetime object.
+    """
+    if initTime is None: return initTime
+    if isinstance(initTime, datetime):
+        return initTime
+    if isinstance(initTime, str):
+        try:
+            initTime = datetime.strptime(initTime, "%y%m%d%H")
+            return initTime
+        except Exception:
+            pass
+        try:
+            initTime = datetime.strptime(initTime, "%Y%m%d%H")
+            return initTime
+        except Exception:
+            pass
+    print('The initTime should be like "2020061208" and format is YYYYmmddHH.')
+    return None
+
+
+def check_model(model, model_dirs):
+    """
+    Check the given model dose supported or not.
+    """
+    model = model.upper()
+    if model in model_dirs:
+        return model_dirs[model]
+    else:
+        print('{} dose not supported. Please select {}'.format(
+            model, ','.join(model_dirs.keys())))
+        return None
+
+
+def check_frange(frange):
+    """
+    Check the forecast hour range.
+    """
+    if frange is None: return None
+    # check the length
+    if (len(frange) < 2) or (len(frange) > 3):
+        print("frange should be [start, end(, step)]. If step doesn't given, step=6.")
+        return None
+    # check the order
+    if frange[0] > frange[1]:
+        print("frange[0] should be less than frange[1].")
+        return None
+    step = 6 if len(frange) < 3 else frange[2]
+    fhours = list(range(frange[0], frange[1]+1, step))
+    return fhours
+
+
 def get_map_regions():
     """
     Get the map region lon/lat limits.
 
     Returns:
-        Dictionary: the region limits, 'name': [lonmin, lonmax, latmin, latmax]
+        Dictionary: the region limits, 'name': (lonmin, lonmax, latmin, latmax)
     """
     map_region = {
-        '中国': [70, 140, 8, 60], '中国陆地': [73, 136, 15, 56],
-        '中国及周边': [50, 160, 0, 70], '东部海域': [115, 135, 20, 42],
-        '南部海域': [103, 125, 3, 28], '华北': [103, 129, 30, 50], '冬奥': [114,118,39,42],
-        '东北': [103, 140, 32, 58], '华东': [107, 130, 20, 41],
-        '华中': [100, 123, 22, 42], '华南': [100, 126, 12, 30],
-        '西南': [90, 113, 18, 38], '西北': [89, 115, 27, 47],
-        '新疆': [70, 101, 30, 52], '青藏': [68, 105, 18, 46],
-        '河南': [109.8, 117.8, 31, 37.4]}
+        '中国': (70, 140, 8, 60), '中国陆地': (73, 136, 15, 56),
+        '中国及周边': (50, 160, 0, 70), '东部海域': (115, 135, 20, 42),
+        '南部海域': (103, 125, 3, 28), '华北': (103, 129, 30, 50), '冬奥': (114,118,39,42),
+        '东北': (103, 140, 32, 58), '华东': (107, 130, 20, 41),
+        '华中': (100, 123, 22, 42), '华南': (100, 126, 12, 30),
+        '西南': (90, 113, 18, 38), '西北': (89, 115, 27, 47),
+        '新疆': (70, 101, 30, 52), '青藏': (68, 105, 18, 46),
+        '河南': (109.8, 117.8, 31, 37.4)}
     return map_region
 
 
@@ -52,15 +109,15 @@ def get_map_global_regions():
     Get the map region lon/lat limits.
 
     Returns:
-        Dictionary: the region limits, 'name': [lonmin, lonmax, latmin, latmax]
+        Dictionary: the region limits, 'name': (lonmin, lonmax, latmin, latmax)
     """
     map_region = get_map_regions()
     map_region.update({
-        '全球': [-180, 180, -90, 90], '亚洲': [35, 140, 5, 80],
-        '东亚': [90, 160, 5, 70], '南亚': [65, 135, -10, 35],
-        '中亚': [25, 80, 10, 55], '欧洲': [-15, 35, 28, 72],
-        '非洲': [-20, 55, -40, 40], '北美': [220, 305, 10, 65],
-        '南美': [270, 330, -58, 14], '澳洲': [110, 180, -50, 0]})
+        '全球': (-180, 180, -90, 90), '亚洲': (35, 140, 5, 80),
+        '东亚': (90, 160, 5, 70), '南亚': (65, 135, -10, 35),
+        '中亚': (25, 80, 10, 55), '欧洲': (-15, 35, 28, 72),
+        '非洲': (-20, 55, -40, 40), '北美': (220, 305, 10, 65),
+        '南美': (270, 330, -58, 14), '澳洲': (110, 180, -50, 0)})
     return map_region
 
 
@@ -119,16 +176,30 @@ def check_region_to_contour(map_region, cnt1, cnt2, thred=600):
         return cnt2
 
 
-class PlotAttrs:
+def get_plot_attrs(name, clevs=None):
     """
-    Predefined plot's attributes for meteorological variables.
-    """
-    
-    @staticmethod
-    def get_gh_contours():
-        # common levels
-        levels = np.concatenate((np.arange(480, 580, 4), np.arange(580, 604, 4)))
-        linewidths = np.full(len(levels), 1)
-        linewidths[levels == 588] = 2
+    获得预先设置的各种变量绘图属性.
 
-        return {"levels":levels, "linewidths":linewidths}
+    Args:
+        name (str): the name of predefined plot attributes.
+
+    Returns:
+        dict: plot attribute dictionary.
+    """
+
+    # convert to lower
+    name = name.lower()
+
+    if name == 'z_500_contour':
+        if clevs is None:
+            clevs = np.concatenate((np.arange(480, 580, 4), np.arange(580, 604, 4)))
+        linewidths = np.full(len(clevs), 1)
+        linewidths[clevs == 588] = 2
+        return {"levels":clevs, "linewidths":linewidths}
+    elif name == 'qpf_1h_contourf_blues':
+        if clevs is None:
+            clevs = [0.1, 4, 13, 25, 60, 120, 250]
+        cmap = cm.truncate_colormap('Blues', minval=0.1)
+        norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend='max')
+        return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
+

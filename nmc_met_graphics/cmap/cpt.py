@@ -202,7 +202,7 @@ def register_cptcity_cmaps(cptcitycmaps, urlkw={}, cmapnamekw={}):
     return cmaps
 
 
-def gmtColormap_openfile(cptf, name=None):
+def gmtColormap_openfile(cptf, name=None, N=None):
     """Read a GMT color map from an OPEN cpt file
 
     Parameters
@@ -284,7 +284,7 @@ def gmtColormap_openfile(cptf, name=None):
 
     # return colormap
     cdict = dict(red=red, green=green, blue=blue)
-    return mcolors.LinearSegmentedColormap(name=name, segmentdata=cdict)
+    return mcolors.LinearSegmentedColormap(name=name, segmentdata=cdict, N=N)
 
 
 def gmtColormap(cptfile, name=None):
@@ -391,7 +391,7 @@ def plot_colormaps(cmap_list):
     fig.subplots_adjust(top=1, bottom=0, left=0, right=0.9)
 
     for ax, cmap in zip(axes, cmap_list):
-        if isinstance(cmap, basestring):
+        if isinstance(cmap, str):
             cmap = plt.get_cmap(cmap)
         ax.imshow(gradient, aspect='auto', cmap=cmap)
         pos = list(ax.get_position().bounds)

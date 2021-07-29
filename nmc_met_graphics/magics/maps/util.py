@@ -3,66 +3,15 @@
 # Copyright (c) 2020 NMC Developers.
 # Distributed under the terms of the GPL V3 License.
 
-import io
+
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 import tempfile
 import numpy as np
 from IPython.display import Image, display, HTML
+
+from nmc_met_graphics.util import check_frange
 import nmc_met_graphics.web.ipyplot as ipyplot
-
-
-def check_initTime(initTime):
-    """
-    Check the initTime format, return a datetime object.
-    """
-    if initTime is None: return initTime
-    if isinstance(initTime, datetime):
-        return initTime
-    if isinstance(initTime, str):
-        try:
-            initTime = datetime.strptime(initTime, "%y%m%d%H")
-            return initTime
-        except Exception:
-            pass
-        try:
-            initTime = datetime.strptime("%Y%m%d%H")
-            return initTime
-        except Exception:
-            pass
-    print('The initTime should be like "2020061230" and format is YYYYmmddHH.')
-    return None
-
-
-def check_model(model, model_dirs):
-    """
-    Check the given model dose supported or not.
-    """
-    model = model.upper()
-    if model in model_dirs:
-        return model_dirs[model]
-    else:
-        print('{} dose not supported. Please select {}'.format(
-            model, ','.join(model_dirs.keys())))
-        return None
-
-
-def check_frange(frange):
-    """
-    Check the forecast hour range.
-    """
-    if frange is None: return None
-    # check the length
-    if (len(frange) < 2) or (len(frange) > 3):
-        print("frange should be [start, end(, step)]. If step doesn't given, step=6.")
-        return None
-    # check the order
-    if frange[0] > frange[1]:
-        print("frange[0] should be less than frange[1].")
-        return None
-    step = 6 if len(frange) < 3 else frange[2]
-    fhours = list(range(frange[0], frange[1]+1, step))
-    return fhours
 
 
 def draw_multiple_plots(func, kwargs):

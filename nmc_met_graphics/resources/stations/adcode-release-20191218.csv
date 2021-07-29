@@ -1,4 +1,4 @@
-adcode,formatted_address,cityname,province,city,district,lng,lat
+adcode,formatted_address,city_name,province,city,district,lon,lat
 110000,北京市,北京市,北京市,北京市,,116.407526,39.90403
 110100,北京市市辖区,北京市市辖区,北京市,北京市,,116.407526,39.90403
 110101,北京市东城区,东城区,北京市,北京市,东城区,116.416357,39.928353

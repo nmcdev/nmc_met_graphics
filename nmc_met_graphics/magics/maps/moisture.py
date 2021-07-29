@@ -15,9 +15,9 @@ from nmc_met_base.regridding import hinterp
 from nmc_met_base.moisture import cal_ivt
 from nmc_met_io.retrieve_micaps_server import get_latest_initTime
 from nmc_met_io.retrieve_micaps_server import get_model_3D_grid, get_model_grid
-from nmc_met_graphics.util import get_map_region
+from nmc_met_graphics.util import get_map_region, check_initTime, check_model
 from nmc_met_graphics.magics.moisture import draw_ivt
-from nmc_met_graphics.maps import util
+from nmc_met_graphics.magics.maps import util
 
 
 def ivt_compare(initTime=None, fhour=0, frange=None,
@@ -73,13 +73,13 @@ def ivt(initTime=None, fhour=0, frange=None, model='ECMWF', region='中国陆地
                   'GRAPES': ['GRAPES_GFS/SPFH/', 'GRAPES_GFS/UGRD/', 'GRAPES_GFS/VGRD/', 
                              'GRAPES_GFS/PRES/SURFACE/', 'GRAPES_GFS/PRMSL/']}
     if getModels: return list(model_dirs.keys())
-    model_dir = util.check_model(model, model_dirs)
+    model_dir = check_model(model, model_dirs)
     if model_dir is None: return None
 
     # check initTime
     if initTime is None:
         initTime = get_latest_initTime(model_dir[0] + '1000')
-    initTime = util.check_initTime(initTime)
+    initTime = check_initTime(initTime)
     if getInitTime: return initTime
     
     # check frange

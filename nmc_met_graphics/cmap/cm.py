@@ -18,7 +18,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.cm as mplcm
 import matplotlib.colorbar as mcbar
-from matplotlib import colors
 from matplotlib.colors import ListedColormap, to_rgb, to_hex, LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from nmc_met_graphics.cmap.cpt import gmtColormap_openfile
@@ -117,6 +116,7 @@ def discrete_cmap(N, base_cmap=None):
 
 def mpl_colors(cmap=None, N=None):
     """Return a list of RGB values.
+
     Parameters:
         cmap (str): Name of a registered colormap.
         N (int): Number of colors to return.
@@ -140,13 +140,27 @@ def mpl_colors(cmap=None, N=None):
     return plt.get_cmap(cmap)(np.linspace(0, 1, N))
 
 
+def get_colors_from_cmap(cmap, N):
+    """
+    Extract linear interpolated N colors (HEX) from cmap. 
+
+    Args:
+        cmap ([type]): [description]
+        N ([type]): [description]
+    """
+
+    colors = cmap(np.linspace(0,1,N))
+    colors = [mpl.colors.rgb2hex(c) for c in colors]
+    return colors
+
+
 def _to_hex(c):
     """Convert arbitray color specification to hex string."""
     ctype = type(c)
 
     # Convert rgb to hex.
     if ctype is tuple or ctype is np.ndarray or ctype is list:
-        return colors.rgb2hex(c)
+        return mpl.colors.rgb2hex(c)
 
     if ctype is str:
         # If color is already hex, simply return it.
@@ -155,13 +169,14 @@ def _to_hex(c):
             return c
 
         # Convert named color to hex.
-        return colors.cnames[c]
+        return mpl.colors.cnames[c]
 
     raise Exception("Can't handle color of type: {}".format(ctype))
 
 
 def colors2cmap(*args, name=None):
     """Create a colormap from a list of given colors.
+
     Parameters:
         *args: Arbitrary number of colors (Named color, HEX or RGB).
         name (str): Name with which the colormap is registered.
@@ -174,7 +189,7 @@ def colors2cmap(*args, name=None):
         raise Exception("Give at least two colors.")
 
     cmap_data = [_to_hex(c) for c in args]
-    cmap = colors.LinearSegmentedColormap.from_list(name, cmap_data)
+    cmap = LinearSegmentedColormap.from_list(name, cmap_data)
     plt.register_cmap(name, cmap)
 
     return cmap
@@ -189,7 +204,7 @@ def make_cmap_list(color_list):
     """
 
     # from_list(name, colors, N=256, gamma=1.0)
-    return colors.LinearSegmentedColormap.from_list('', color_list)
+    return LinearSegmentedColormap.from_list('', color_list)
 
 
 def grayify_cmap(cmap):
@@ -239,7 +254,7 @@ def plot_colorMaps(cmap):
     plt.show()
 
 
-def ncl_cmaps(name):
+def ncl_cmaps(name, N=None):
     """
     Get the ncl color maps.
     https://github.com/hhuangwx/cmaps
@@ -250,9 +265,9 @@ def ncl_cmaps(name):
 
     # color map file directory
     cmap_file = pkg_resources.resource_filename(
-        "nmc_met_graphics", "resources/colormaps_ncl/" + name + '.rgb')
+        "nmc_met_graphics", "resources/colormaps_ncl/" + str(name) + '.rgb')
     if not os.path.isfile(cmap_file):
-        return None
+        raise ValueError('Improper ncl colormap name.')
 
     # read color data
     pattern = re.compile(r'(\d\.?\d*)\s+(\d\.?\d*)\s+(\d\.?\d*)\n')
@@ -264,10 +279,10 @@ def ncl_cmaps(name):
         rgb = np.asarray(pattern.findall(cmap_buff), 'u1') / 255.
 
     # construct color map
-    return ListedColormap(rgb, name=name)
+    return ListedColormap(rgb, name='ncl_'+str(name), N=N)
 
 
-def guide_cmaps(name):
+def guide_cmaps(name, N=None):
     """
     Get guide color maps.
 
@@ -279,38 +294,60 @@ def guide_cmaps(name):
     cmap_file = pkg_resources.resource_filename(
         "nmc_met_graphics", "resources/colormaps_guide/cs" + str(name) + '.txt')
     if not os.path.isfile(cmap_file):
-        return None
+        raise ValueError('Improper guide colormap name.')
 
     # read color data
     rgb = np.loadtxt(cmap_file)
 
     # construct color map
-    return ListedColormap(rgb/255, name=name)
+    return ListedColormap(rgb/255, name='guide_'+str(name), N=N)
 
 
-def cmasher_cmaps(name):
+def cmasher_cmaps(name, N=None):
     """
     Get cmsaher color maps.
     https://github.com/1313e/CMasher
 
-    :param name: guide color name number, like 42.
+    :param name: color name.
     :return: matplotlib color map.
     """
 
     # color map file directory
     cmap_file = pkg_resources.resource_filename(
-        "nmc_met_graphics", "resources/colormaps_cmasher/cs" + str(name) + '.txt')
+        "nmc_met_graphics", "resources/colormaps_cmasher/cm_" + str(name) + '.txt')
     if not os.path.isfile(cmap_file):
-        return None
+        raise ValueError('Improper cmasher colormap name.')
 
     # read color data
     rgb = np.loadtxt(cmap_file)
 
     # construct color map
-    return ListedColormap(rgb/255, name=name)
+    return ListedColormap(rgb/255, name='cmasher_'+str(name), N=N)
+
+def crameri_cmaps(name, N=None):
+    """
+    Get Fabio Crameri's perceptually uniform colour maps.
+    https://github.com/callumrollo/cmcrameri
+    https://www.fabiocrameri.ch/colourmaps/
+
+    :param name: color name.
+    :return: matplotlib color map.
+    """
+
+    # color map file directory
+    cmap_file = pkg_resources.resource_filename(
+        "nmc_met_graphics", "resources/colormaps_crameri/" + str(name) + '.txt')
+    if not os.path.isfile(cmap_file):
+        raise ValueError('Improper crameri colormap name.')
+
+    # read color data
+    rgb = np.loadtxt(cmap_file)
+
+    # construct color map
+    return ListedColormap(rgb/255, name='crameri_'+str(name), N=N)
 
 
-def ndfd_cmaps(name):
+def ndfd_cmaps(name, N=None):
     """
     Get ndfd color maps.
     refer to https://github.com/eengl/ndfd-colors.
@@ -323,10 +360,10 @@ def ndfd_cmaps(name):
     cmap_file = pkg_resources.resource_filename(
         "nmc_met_graphics", "resources/colormaps_ndfd/" + str(name) + '.cpt')
     if not os.path.isfile(cmap_file):
-        return None
+        raise ValueError('Improper ndfd colormap name.')
 
     # read color data
-    rgb = gmtColormap_openfile(cmap_file, name)
+    rgb = gmtColormap_openfile(cmap_file, 'ndfd_'+str(name), N=N)
 
     # construct color map
     return rgb
@@ -345,7 +382,7 @@ def ndfd_cmaps_show():
         plot_colorMaps(color)
 
 
-class MidpointNormalize(colors.Normalize):
+class MidpointNormalize(mpl.colors.Normalize):
     """
     Introduce MidpointNormalize class that would scale data values to
     colors and add the capability to specify the middle point of a colormap.
@@ -358,7 +395,7 @@ class MidpointNormalize(colors.Normalize):
     """
     def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
         self.midpoint = midpoint
-        colors.Normalize.__init__(self, vmin, vmax, clip)
+        mpl.colors.Normalize.__init__(self, vmin, vmax, clip)
 
     def __call__(self, value, clip=None):
         # I'm ignoring masked values and all kinds of edge cases to make a
@@ -415,12 +452,12 @@ class Cmaps(object):
             if '-' in cname:
                 cname = cname.replace('-', '_')
 
-            cmap = colors.ListedColormap(self._coltbl(cmap_file), name=cname)
+            cmap = mpl.colors.ListedColormap(self._coltbl(cmap_file), name=cname)
             mplcm.register_cmap(name=cname, cmap=cmap)
             self._cmap_d[cname] = cmap
 
             cname = cname + '_r'
-            cmap = colors.ListedColormap(self._coltbl(cmap_file)[::-1],
+            cmap = mpl.colors.ListedColormap(self._coltbl(cmap_file)[::-1],
                                          name=cname)
             mplcm.register_cmap(name=cname, cmap=cmap)
             self._cmap_d[cname] = cmap
@@ -595,7 +632,7 @@ class gradient:
                 self.colors.append(hex_val)
         
         #Convert to a colormap and return
-        self.cmap = colors.ListedColormap(self.colors)
+        self.cmap = mpl.colors.ListedColormap(self.colors)
         return self.cmap
 
 
