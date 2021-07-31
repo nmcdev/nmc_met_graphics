@@ -1177,6 +1177,7 @@ class BaseMap():
         Wrapper to matplotlib's pcolormesh function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
         data projection is passed.
+        Note: if you want to mask some values, the colormap is not work and set to np.nan will work.
         """
 
         #Get current axes if not specified
