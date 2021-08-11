@@ -100,7 +100,7 @@ def get_map_regions():
         '华中': (100, 123, 22, 42), '华南': (100, 126, 12, 30),
         '西南': (90, 113, 18, 38), '西北': (89, 115, 27, 47),
         '新疆': (70, 101, 30, 52), '青藏': (68, 105, 18, 46),
-        '河南': (109.8, 117.8, 31, 37.4)}
+        '河南': (109.8, 117, 31, 37.5)}
     return map_region
 
 
@@ -176,7 +176,7 @@ def check_region_to_contour(map_region, cnt1, cnt2, thred=600):
         return cnt2
 
 
-def get_plot_attrs(name, clevs=None):
+def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
     """
     获得预先设置的各种变量绘图属性.
 
@@ -189,17 +189,50 @@ def get_plot_attrs(name, clevs=None):
 
     # convert to lower
     name = name.lower()
-
+    
     if name == 'z_500_contour':
         if clevs is None:
             clevs = np.concatenate((np.arange(480, 580, 4), np.arange(580, 604, 4)))
         linewidths = np.full(len(clevs), 1)
         linewidths[clevs == 588] = 2
         return {"levels":clevs, "linewidths":linewidths}
+    
     elif name == 'qpf_1h_contourf_blues':
         if clevs is None:
             clevs = [0.1, 4, 13, 25, 60, 120, 250]
         cmap = cm.truncate_colormap('Blues', minval=0.1)
-        norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend='max')
+        norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend=extend)
         return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
+    
+    elif name == 'nmc_accumulated_rainfall':
+        if clevs is None:
+            clevs = [0.1, 10, 25, 50, 100, 250, 400, 600, 800, 1000]
+        clevs = np.array(clevs)
+        _colors = [[161, 241, 141], [61, 186, 61], [96,  184, 255], [0,   0,   255],
+                  [250, 0,   250], [128, 0,   64], [255, 170, 0], [255, 102, 0],
+                  [230, 0,   0], [80,  45,  10]]
+        _colors = np.array(_colors)/255.0
+        if min_lev is not None:
+            idx = np.where(clevs >= min_lev)
+            clevs = clevs[idx]
+            _colors = _colors[idx,]
+        cmap, norm = mpl.colors.from_levels_and_colors(clevs, _colors, extend=extend)
+        return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
+    
+    elif name == 'ecmf_accumulated_rainfall':
+        if clevs is None:
+            clevs = [0.5, 10, 30, 50, 70, 100, 130, 160]
+        clevs = np.array(clevs)
+        _colors = np.array(['#a7aaaa', '#5cc8d7', '#3076bc', '#6aaa43',
+                            '#f5832a', '#ee2f2d', '#8350a0', '#231f20'])
+        if min_lev is not None:
+            idx = np.where(clevs >= min_lev)
+            clevs = clevs[idx]
+            _colors = _colors[idx]
+        cmap, norm = mpl.colors.from_levels_and_colors(clevs, _colors, extend=extend)
+        return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
+    
+    else:
+        raise ValueError('{} is not supported.'.format(name))
+
 

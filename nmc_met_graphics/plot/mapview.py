@@ -15,6 +15,7 @@ from numpy.lib.arraysetops import isin
 from numpy.core.fromnumeric import ndim
 import scipy.ndimage as ndimage
 import pandas as pd
+import xarray as xr
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
@@ -69,17 +70,6 @@ def add_china_map_2basemap(mp, ax, name='province', facecolor='none',
         ax.add_patch(poly)
 
 
-def label_fmt(x):
-    """
-    This custom formatter removes trailing zeros, e.g. "1.0" becomes "1", and
-    then adds a percent sign.
-    """
-    s = f"{x:.1f}"
-    if s.endswith("0"):
-        s = f"{x:.0f}"
-    return rf"{s}" if plt.rcParams["text.usetex"] else f"{s}"
-
-
 def add_china_map_2cartopy(ax, name='province', facecolor='none',
                            edgecolor='c', lw=2, **kwargs):
     """
@@ -106,6 +96,17 @@ def add_china_map_2cartopy(ax, name='province', facecolor='none',
     ax.add_geometries(
         Reader(shpfile).geometries(), ccrs.PlateCarree(),
         facecolor=facecolor, edgecolor=edgecolor, lw=lw, **kwargs)
+
+
+def label_fmt(x):
+    """
+    This custom formatter removes trailing zeros, e.g. "1.0" becomes "1", and
+    then adds a percent sign.
+    """
+    s = f"{x:.1f}"
+    if s.endswith("0"):
+        s = f"{x:.0f}"
+    return rf"{s}" if plt.rcParams["text.usetex"] else f"{s}"
 
 
 class BaseMap():
@@ -465,19 +466,27 @@ class BaseMap():
 
         #Draw background
         if style.lower() == 'tburg':
+            # features
             ax.add_feature(cfeature.OCEAN.with_scale(res),facecolor='#edfbff',edgecolor=None)
             ax.add_feature(cfeature.LAKES.with_scale(res),facecolor='#edfbff',edgecolor=None)
             ax.add_feature(cfeature.LAND.with_scale(res),facecolor='#fbf5ea',edgecolor='gray',
                            linewidths=0.3*linewidths)
-            self.drawnation(linewidths=2.0, color='#694322')
-            self.drawstates(linewidths=0.6, color="#694322")
+            # map bounaries
+            self.drawnation(linewidths=2.0*linewidths, color='#694322')
+            self.drawstates(linewidths=0.6*linewidths, color="#694322")
             if county:
-                self.drawcounties(linewidths=0.3, color='gray')
-            self.drawrivers(linewidths=1.2, color="#6fb0f8")
+                self.drawcounties(linewidths=0.3*linewidths, color='gray')
+            self.drawrivers(linewidths=1.2*linewidths, color="#6fb0f8")
             self.ax.spines['geo'].set_linewidth(3)
+            
+        elif style.lower() == 'white':
+            self.drawnation(linewidths=3.0*linewidths, color='black')
+            self.drawstates(linewidths=3.0*linewidths, color="black")
+            self.drawcounties(linewidths=0.4*linewidths, color='gray')
+            self.drawrivers(linewidths=1.0*linewidths, color="blue")
+            self.ax.spines['geo'].set_linewidth(4*linewidths)
         else:
             print('The {} style is not supported.'.format(style))
-
 
     def tianditu(self, ax=None, scale=5, map_type='VECTOR', token=None):
         """
@@ -733,7 +742,7 @@ class BaseMap():
             contour.set_clip_path(clip)
         return clip
 
-    def gridlines(self, ax=None, draw_labels=True, font_size=14, linewidth=1,
+    def gridlines(self, ax=None, draw_labels=True, font_size=16, linewidth=1,
                   color='gray', alpha=0.5, linestyle='--', dms=True,
                   x_inline=False, y_inline=False, **kwargs):
         """
@@ -833,7 +842,8 @@ class BaseMap():
 
 
     def title(self, ax=None, left_title=None, center_title=None,
-              right_title=None, font_size=18, family='Microsoft YaHei'):
+              right_title=None, font_size=18, family='Microsoft YaHei',
+              **kwargs):
         """
         Add title text.
 
@@ -855,14 +865,15 @@ class BaseMap():
         font3 = FontProperties(family=family, size=int(font_size*0.6))
 
         if left_title is not None:
-            ax.set_title(left_title,loc='left', fontproperties=font1)
+            ax.set_title(left_title,loc='left', fontproperties=font1, **kwargs)
         if center_title is not None:
-            ax.set_title(center_title,loc='center', fontproperties=font2)
+            ax.set_title(center_title,loc='center', fontproperties=font2, **kwargs)
         if right_title is not None:
-            ax.set_title(right_title,loc='right', fontproperties=font3)
+            ax.set_title(right_title,loc='right', fontproperties=font3, **kwargs)
 
     def left_title(self, name, ax=None, time=None, fhour=None, atime=0, 
-                   font_size=18, family='Microsoft YaHei', **kwargs):
+                   time_zone=None, font_size=18, family='Microsoft YaHei',
+                   **kwargs):
         """
         Add product name and time information to left title.
 
@@ -887,12 +898,16 @@ class BaseMap():
             #Check time and convert to datetime object
             if isinstance(time, np.datetime64):
                 time = pd.to_datetime(str(time)).replace(tzinfo=None).to_pydatetime()
+            elif isinstance(time, pd.Timestamp):
+                time = time.replace(tzinfo=None).to_pydatetime()
             elif isinstance(time, str):
                 time = pd.to_datetime(time)
 
             if fhour is not None:  # model forecast
                 valid_time = time + timedelta(hours=fhour)
                 time_str = time.strftime('Init %Y-%m-%dT%H')
+                if isinstance(time_zone,str):
+                    time_str = time_str + '('+time_zone+')'
                 if atime == 0:
                     valid_str = valid_time.strftime('Valid %m-%dT%H')
                 else:
@@ -903,12 +918,14 @@ class BaseMap():
                 titlestr = titlestr+' . '+time_str+'\n'+valid_str+' | '+fhour_str
             else:
                 if atime == 0:
-                    time_str = time.strftime('Time %Y-%m-%dT%H')
+                    time_str = time.strftime('%Y-%m-%dT%H')
                 else:
                     time_str = (
-                        (time-timedelta(hours=atime)).strftime('Time %Y-%m-%dT%H') +
+                        (time-timedelta(hours=atime)).strftime('%Y-%m-%dT%H') +
                         time.strftime(' to %m-%dT%H'))
                 titlestr = titlestr+'\n'+time_str
+                if  isinstance(time_zone,str):
+                    titlestr = titlestr + '('+time_zone+')'
 
         # draw title
         font = FontProperties(family=family, size=font_size, weight='bold')
@@ -936,8 +953,8 @@ class BaseMap():
         font = FontProperties(family=family, size=font_size)
         ax.set_title(titlestr,loc='right', fontproperties=font, **kwargs)
 
-    def graphics_info(self, info_text=None, ax=None, font_size=16, 
-                      family='sans-serif', **kwargs):
+    def info(self, x=0.98, y=0.01, info_text=None, ax=None, font_size=16, 
+             family='sans-serif', **kwargs):
         """
         Add graphics information.
 
@@ -957,7 +974,7 @@ class BaseMap():
 
         # draw title
         font = FontProperties(family=family, size=font_size, weight='bold')
-        ax.text(0.98, 0.01, info_text, color='black',
+        ax.text(x, y, info_text, color='black',
                 verticalalignment='bottom', horizontalalignment='right',
                 fontproperties=font, transform=ax.transAxes, 
                 path_effects=[path_effects.withStroke(linewidth=4, foreground ="w")],
@@ -1021,7 +1038,7 @@ class BaseMap():
         geodetic_transform = ccrs.Geodetic()._as_mpl_transform(ax)
         for _, row in cities.iterrows():
             text_transform = offset_copy(geodetic_transform, units='dots', x=-5)
-            ax.plot(row['lon'], row['lat'], marker='s', color=markcolor, 
+            ax.plot(row['lon'], row['lat'], marker='s', color=markcolor, linestyle='None',
                     markersize=marker_size, alpha=0.7, transform=ccrs.PlateCarree())
             ax.text(row['lon'], row['lat'], row['city_name'], clip_on=True,
                     verticalalignment='center', horizontalalignment='right',
@@ -1029,6 +1046,147 @@ class BaseMap():
                     path_effects=[path_effects.Stroke(linewidth=1, foreground=foreground),
                     path_effects.Normal()])
 
+    def topo_hatches(self, ax=None, levels=[800], colors='gray',
+                     hatches=['////'], sigma=None, alpha=0.3, **kwargs):
+        """
+        Draw filled-hatches topography overlay on map.
+        You can use sigma to smooth topography.
+        
+        Examples:
+        > m.topo_hatches(levels=[400, 800, 10000], hatches=['..','///'])
+        """
+        
+        #Get current axes if not specified
+        ax = ax or self._check_ax()
+        
+        #Check contour levels
+        if np.isscalar(levels):
+            levels = list(levels)
+        if len(levels) == 1:
+            levels.append(10000)
+            
+        #Read topo data
+        topofile = pkg_resources.resource_filename(
+            'nmc_met_graphics', "resources/topo/topo_china.nc")
+        topo = xr.open_dataset(topofile)
+        lon = topo.coords['Longitude'].values
+        lat = topo.coords['Latitude'].values
+        
+        #Draw hatches
+        self.contourf(lon, lat, topo['topo'].values,
+                      ax=ax, transform=ccrs.PlateCarree(),
+                      levels=levels, colors=colors, hatches=hatches,
+                      sigma=sigma, alpha=alpha, **kwargs)
+    
+    def points(self, lon, lat, ax=None, transform=None,
+               marker='o', size=10, facecolor='red',
+               edgewidth=2, edgecolor='white',alpha=0.8,
+               **kwargs):
+        """
+        Draw points symbol on the map.
+
+        Args:
+            lon (np.array): longitude coordinates.
+            lat (np.array): latitude coordinates.
+            ax (Axes, optional): Cartopy GeoAxes. Defaults to None.
+            transform (crs, optional): Cartopy crs object. Defaults to None.
+            markers (str, optional): matplotlib markers. Defaults to 'o'.
+            size (int, optional): marker size. Defaults to 10.
+            facecolor (str, optional): marker facecolor. Defaults to 'red'.
+            edgewidth (int, optional): marker edge width. Defaults to 2.
+            edgecolors (str, optional): marker edge colors. Defaults to 'black'.
+            alpha (float, optional): marker transparency. Defaults to 0.8.
+        """
+        
+        #Get current axes if not specified
+        ax = ax or self._check_ax()
+        
+        #Check transform if not specified
+        if transform is None: transform = ccrs.PlateCarree()
+        
+        #Draw points
+        ax.plot(lon, lat, marker=marker, markersize=size, linestyle='None',
+                markerfacecolor=facecolor, markeredgecolor=edgecolor,
+                markeredgewidth=edgewidth, alpha=alpha,  transform=transform,
+                **kwargs)
+    
+
+    def markers(self,lon,lat,values,clevs,ax=None,transform=None,
+                markers='o', colors=None, sizes=12, alpha=0.8,
+                edgecolors='black', linewidths=0.3, 
+                legend_loc='lower left', legend_fontsize=14,
+                legend_title='', **kwargs):
+        """
+        Plot point markers for different levels with colors, sizes and so on.
+
+        Args:
+            lon (np.array): longitude coordinates.
+            lat (np.array): latitude coordinates.
+            values (np.array): point values.
+            clevs (list or np.array): levels for values
+            ax (Axes, optional): Cartopy GeoAxes. Defaults to None.
+            transform (crs, optional): Cartopy crs object. Defaults to None.
+            markers (str, optional): matplotlib markers. Defaults to 'o'.
+            colors (list or str, optional): colors for clevs. Defaults to None.
+            sizes (int or list, optional): marker sizes, int or list for clevs. Defaults to 12.
+            alpha (float, optional): marker transparency. Defaults to 0.8.
+            edgecolors (str, optional): marker edge colors. Defaults to 'black'.
+            linewidths (float, optional): linewidths. Defaults to 0.3.
+        """
+
+        #Get current axes if not specified
+        ax = ax or self._check_ax()
+        
+        #Check transform if not specified
+        if transform is None: transform = ccrs.PlateCarree()
+
+        #Create dataframe
+        data = pd.DataFrame({'lon':lon,'lat':lat,'values':values})
+
+        #Check graphic parameters
+        nlevs = len(clevs)
+        if len(markers) == 1:
+            markers = [markers for lev in clevs]
+        if not hasattr(sizes, '__len__'):
+            sizes   = [sizes for lev in clevs]
+        if not hasattr(alpha, '__len__'):
+            alpha   = [alpha for lev in clevs]
+        if colors is None:
+            colors  = nmgcmap.cm.get_colors_from_cmap(nmgcmap.cm.guide_cmaps('2'), nlevs)
+        if len(colors) == 1:
+            colors  = [colors for lev in clevs]
+
+        #Loop every levels
+        legend_elements = []
+        for ilev, lev in enumerate(clevs):
+            if ilev == len(clevs)-1:
+                temp = data[(data['values'] >= clevs[ilev])]
+                label = label_fmt(lev)+'~Inf'
+            else:
+                temp = data[(data['values'] >= clevs[ilev]) & (data['values'] < clevs[ilev+1])]
+                label = label_fmt(clevs[ilev])+'~'+label_fmt(clevs[ilev+1])
+            
+            # append legend
+            legend_elements.append(
+                Line2D([0], [0], marker=markers[ilev], color='w', label=label,
+                       markerfacecolor=colors[ilev], markersize=15))
+            
+            # check data
+            if len(temp) == 0:
+                continue
+
+            # draw data symbols
+            ax.scatter(temp['lon'], temp['lat'], marker=markers[ilev],color=colors[ilev],
+                       s=sizes[ilev], alpha=alpha[ilev], edgecolors=edgecolors,
+                       linewidths=linewidths, transform=transform, **kwargs)
+
+        # add legend
+        font = FontProperties(family='sans-serif', size=legend_fontsize, weight='bold')
+        lg = ax.legend(handles=legend_elements, loc=legend_loc, prop=font)
+        font = FontProperties(family='SimHei', size=legend_fontsize*1.2)
+        lg.set_title(legend_title, prop=font)
+    
+    
     def colorbar(self,mappable=None,ax_cb=None, location='right',size="2.5%",pad='1%',
                  label_size=13,label_fmt=label_fmt,fig=None,ax=None,**kwargs):
         """
@@ -1094,81 +1252,6 @@ class BaseMap():
         #Reset parent axis as the current axis
         fig.sca(ax)
         return cb
-
-    def markers(self,lon,lat,values,clevs,ax=None,transform=None,
-                markers='o', colors=None, sizes=12, alpha=0.8,
-                edgecolors='black', linewidths=0.3, 
-                legend_loc='lower left', legend_fontsize=14,
-                legend_title='', **kwargs):
-        """
-        Plot point markers for different levels with colors, sizes and so on.
-
-        Args:
-            lon ([type]): [description]
-            lat ([type]): [description]
-            values ([type]): [description]
-            clevs ([type]): [description]
-            ax ([type], optional): [description]. Defaults to None.
-            transform ([type], optional): [description]. Defaults to None.
-            markers (str, optional): [description]. Defaults to 'o'.
-            colors ([type], optional): [description]. Defaults to None.
-            sizes (int, optional): [description]. Defaults to 12.
-            alpha (float, optional): [description]. Defaults to 0.8.
-            edgecolors (str, optional): [description]. Defaults to 'black'.
-            linewidths (float, optional): [description]. Defaults to 0.3.
-        """
-
-        #Get current axes if not specified
-        ax = ax or self._check_ax()
-        
-        #Check transform if not specified
-        if transform is None: transform = ccrs.PlateCarree()
-
-        #Create dataframe
-        data = pd.DataFrame({'lon':lon,'lat':lat,'values':values})
-
-        #Check graphic parameters
-        nlevs = len(clevs)
-        if len(markers) == 1:
-            markers = [markers for lev in clevs]
-        if not hasattr(sizes, '__len__'):
-            sizes   = [sizes for lev in clevs]
-        if not hasattr(alpha, '__len__'):
-            alpha   = [alpha for lev in clevs]
-        if colors is None:
-            colors  = nmgcmap.cm.get_colors_from_cmap(nmgcmap.cm.guide_cmaps('2'), nlevs)
-        if len(colors) == 1:
-            colors  = [colors for lev in clevs]
-
-        #Loop every levels
-        legend_elements = []
-        for ilev, lev in enumerate(clevs):
-            if ilev == len(clevs)-1:
-                temp = data[(data['values'] >= clevs[ilev])]
-                label = label_fmt(lev)+'~Inf'
-            else:
-                temp = data[(data['values'] >= clevs[ilev]) & (data['values'] < clevs[ilev+1])]
-                label = label_fmt(clevs[ilev])+'~'+label_fmt(clevs[ilev+1])
-            
-            # append legend
-            legend_elements.append(
-                Line2D([0], [0], marker=markers[ilev], color='w', label=label,
-                       markerfacecolor=colors[ilev], markersize=15))
-            
-            # check data
-            if len(temp) == 0:
-                continue
-
-            # draw data symbols
-            ax.scatter(temp['lon'], temp['lat'], marker=markers[ilev],color=colors[ilev],
-                       s=sizes[ilev], alpha=alpha[ilev], edgecolors=edgecolors,
-                       linewidths=linewidths, transform=transform, **kwargs)
-
-        # add legend
-        font = FontProperties(family='sans-serif', size=legend_fontsize, weight='bold')
-        lg = ax.legend(handles=legend_elements, loc=legend_loc, prop=font)
-        font = FontProperties(family='SimHei', size=legend_fontsize*1.2)
-        lg.set_title(legend_title, prop=font)
 
 
     def pcolormesh(self,lon,lat,data,*args,ax=None,transform=None,

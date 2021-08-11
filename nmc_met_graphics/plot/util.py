@@ -22,6 +22,22 @@ import matplotlib.ticker as mticker
 from scipy.ndimage.filters import minimum_filter, maximum_filter
 
 
+def get_mplstyle(name):
+    """
+    Return matplotlib style filepath.
+
+    Args:
+        name (str): mplstyle name.
+    """
+    
+    file = pkg_resources.resource_filename(
+            'nmc_met_graphics', "resources/mplstyle/{}.mplstyle".format(name))
+    if os.path.isfile(file):
+        return file
+    else:
+        raise ValueError('Cannot find the {} sytle file.'.format(file))
+
+
 def add_gridlines(ax, draw_labels=True, linewidth=2, color='gray', alpha=0.5,
                   linestyle='--', xlabels_top=False, ylabels_right=False,
                   xlabel_style={'size': 16}, ylabel_style={'size': 16},
