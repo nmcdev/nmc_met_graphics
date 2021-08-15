@@ -193,6 +193,7 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
     if name == 'z_500_contour':
         if clevs is None:
             clevs = np.concatenate((np.arange(480, 580, 4), np.arange(580, 604, 4)))
+        clevs = np.asarray(clevs)
         linewidths = np.full(len(clevs), 1)
         linewidths[clevs == 588] = 2
         return {"levels":clevs, "linewidths":linewidths}
@@ -200,6 +201,7 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
     elif name == 'qpf_1h_contourf_blues':
         if clevs is None:
             clevs = [0.1, 4, 13, 25, 60, 120, 250]
+        clevs = np.asarray(clevs)
         cmap = cm.truncate_colormap('Blues', minval=0.1)
         norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend=extend)
         return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
@@ -207,11 +209,11 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
     elif name == 'nmc_accumulated_rainfall':
         if clevs is None:
             clevs = [0.1, 10, 25, 50, 100, 250, 400, 600, 800, 1000]
-        clevs = np.array(clevs)
+        clevs = np.asarray(clevs)
         _colors = [[161, 241, 141], [61, 186, 61], [96,  184, 255], [0,   0,   255],
                   [250, 0,   250], [128, 0,   64], [255, 170, 0], [255, 102, 0],
                   [230, 0,   0], [80,  45,  10]]
-        _colors = np.array(_colors)/255.0
+        _colors = np.asarray(_colors)/255.0
         if min_lev is not None:
             idx = np.where(clevs >= min_lev)
             clevs = clevs[idx]
@@ -222,7 +224,7 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
     elif name == 'ecmf_accumulated_rainfall':
         if clevs is None:
             clevs = [0.5, 10, 30, 50, 70, 100, 130, 160]
-        clevs = np.array(clevs)
+        clevs = np.asarray(clevs)
         _colors = np.array(['#a7aaaa', '#5cc8d7', '#3076bc', '#6aaa43',
                             '#f5832a', '#ee2f2d', '#8350a0', '#231f20'])
         if min_lev is not None:
@@ -230,6 +232,15 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
             clevs = clevs[idx]
             _colors = _colors[idx]
         cmap, norm = mpl.colors.from_levels_and_colors(clevs, _colors, extend=extend)
+        return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
+    
+    elif name == 'probability_forecast':
+        if clevs is None:
+            clevs = [1,5,10,20,30,40,50,60,70,80,90,95,100]
+        clevs = np.asarray(clevs)
+        cmap = cm.guide_cmaps(44)
+        cmap = cm.truncate_colormap(cmap, maxval=0.95)
+        norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend=extend)
         return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
     
     else:

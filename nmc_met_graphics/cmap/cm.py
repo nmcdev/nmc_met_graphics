@@ -282,7 +282,7 @@ def ncl_cmaps(name, N=None):
     return ListedColormap(rgb, name='ncl_'+str(name), N=N)
 
 
-def guide_cmaps(name, N=None):
+def guide_cmaps(name, N=255):
     """
     Get guide color maps.
 
@@ -300,7 +300,7 @@ def guide_cmaps(name, N=None):
     rgb = np.loadtxt(cmap_file)
 
     # construct color map
-    return ListedColormap(rgb/255, name='guide_'+str(name), N=N)
+    return LinearSegmentedColormap.from_list('guide_'+str(name), rgb/255, N=N)
 
 
 def cmasher_cmaps(name, N=None):
