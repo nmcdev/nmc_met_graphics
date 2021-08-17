@@ -904,6 +904,8 @@ class BaseMap():
                 time = pd.to_datetime(time)
 
             if fhour is not None:  # model forecast
+                if isinstance(fhour, np.ndarray):
+                    fhour = fhour[0]
                 valid_time = time + timedelta(hours=fhour)
                 time_str = time.strftime('Init %Y-%m-%dT%H')
                 if isinstance(time_zone,str):
