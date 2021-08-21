@@ -202,7 +202,7 @@ def register_cptcity_cmaps(cptcitycmaps, urlkw={}, cmapnamekw={}):
     return cmaps
 
 
-def gmtColormap_openfile(cptf, name=None, N=None):
+def gmtColormap_openfile(cptf, name=None, N=256):
     """Read a GMT color map from an OPEN cpt file
 
     Parameters

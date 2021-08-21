@@ -35,6 +35,7 @@ from cartopy.io.shapereader import Reader
 from cartopy.mpl.patch import geos_to_path
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
+from nmc_met_io.util import get_sub_grid
 from nmc_met_graphics.util import get_map_region
 import nmc_met_graphics.cmap as nmgcmap
 
@@ -1017,7 +1018,7 @@ class BaseMap():
                 'nmc_met_graphics', "resources/stations/cma_city_station_info.dat"),  delimiter=r"\s+")
         elif city_type == 'station':      # 2420个基本站点信息
             cities = pd.read_csv(pkg_resources.resource_filename(
-                'nmc_met_graphics', "resources/stations/cma_national_station_info.dat"),  delimiter=r"\s+")
+                'nmc_met_graphics', "resources/stations/cma_national_station_info.dat"))
         elif city_type == 'adcode':       # 3555个中国行政区划代码
             cities = pd.read_csv(pkg_resources.resource_filename(
                 'nmc_met_graphics', "resources/stations/adcode-release-20191218.csv"))
@@ -1048,7 +1049,7 @@ class BaseMap():
                     path_effects=[path_effects.Stroke(linewidth=1, foreground=foreground),
                     path_effects.Normal()])
 
-    def topo_hatches(self, ax=None, levels=[800], colors='gray',
+    def topo_hatches(self, ax=None, levels=[800], colors='gray', cut_extent=True,
                      hatches=['////'], sigma=None, alpha=0.3, **kwargs):
         """
         Draw filled-hatches topography overlay on map.
@@ -1073,10 +1074,14 @@ class BaseMap():
         topo = xr.open_dataset(topofile)
         lon = topo.coords['Longitude'].values
         lat = topo.coords['Latitude'].values
+        topo = topo['topo'].values
+        
+        #Cut the grid data for fast plot.
+        if cut_extent and self.extent is not None:
+            topo, lon, lat = get_sub_grid(topo, lon, lat, limit=self.extent)
         
         #Draw hatches
-        self.contourf(lon, lat, topo['topo'].values,
-                      ax=ax, transform=ccrs.PlateCarree(),
+        self.contourf(lon, lat, topo, ax=ax, transform=ccrs.PlateCarree(),
                       levels=levels, colors=colors, hatches=hatches,
                       sigma=sigma, alpha=alpha, **kwargs)
     
@@ -1106,13 +1111,24 @@ class BaseMap():
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
         
+        # extract subregion
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        if self.extent is not None:
+            limit = self.extent
+            idx = (limit[0] <= lon) & (lon <= limit[1]) & \
+                  (limit[2] <= lat) & (lat <= limit[3])
+            lon = lon[idx]
+            lat = lat[idx]
+        if len(lon) == 0 or len(lat) == 0:
+            return
+        
         #Draw points
         ax.plot(lon, lat, marker=marker, markersize=size, linestyle='None',
                 markerfacecolor=facecolor, markeredgecolor=edgecolor,
                 markeredgewidth=edgewidth, alpha=alpha,  transform=transform,
                 **kwargs)
     
-
     def markers(self,lon,lat,values,clevs,ax=None,transform=None,
                 markers='o', colors=None, sizes=12, alpha=0.8,
                 edgecolors='black', linewidths=0.3, 
@@ -1122,9 +1138,9 @@ class BaseMap():
         Plot point markers for different levels with colors, sizes and so on.
 
         Args:
-            lon (np.array): longitude coordinates.
-            lat (np.array): latitude coordinates.
-            values (np.array): point values.
+            lon (np.array): longitude coordinates for markers.
+            lat (np.array): latitude coordinates for markers.
+            values (np.array): point values for markers.
             clevs (list or np.array): levels for values
             ax (Axes, optional): Cartopy GeoAxes. Defaults to None.
             transform (crs, optional): Cartopy crs object. Defaults to None.
@@ -1157,6 +1173,19 @@ class BaseMap():
             colors  = nmgcmap.cm.get_colors_from_cmap(nmgcmap.cm.guide_cmaps('2'), nlevs)
         if len(colors) == 1:
             colors  = [colors for lev in clevs]
+            
+        # extract subregion
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        if self.extent is not None:
+            limit = self.extent
+            idx = (limit[0] <= lon) & (lon <= limit[1]) & \
+                  (limit[2] <= lat) & (lat <= limit[3])
+            lon = lon[idx]
+            lat = lat[idx]
+            values = values[idx]
+        if len(lon) == 0 or len(lat) == 0:
+            return
 
         #Loop every levels
         legend_elements = []
@@ -1187,8 +1216,7 @@ class BaseMap():
         lg = ax.legend(handles=legend_elements, loc=legend_loc, prop=font)
         font = FontProperties(family='SimHei', size=legend_fontsize*1.2)
         lg.set_title(legend_title, prop=font)
-    
-    
+        
     def colorbar(self,mappable=None,ax_cb=None, location='right',size="2.5%",pad='1%',
                  label_size=13,label_fmt=label_fmt,fig=None,ax=None,**kwargs):
         """
@@ -1255,9 +1283,8 @@ class BaseMap():
         fig.sca(ax)
         return cb
 
-
     def pcolormesh(self,lon,lat,data,*args,ax=None,transform=None,
-                   sigma=None, **kwargs):
+                   cut_extent=True, sigma=None, **kwargs):
         """
         Wrapper to matplotlib's pcolormesh function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1270,6 +1297,10 @@ class BaseMap():
         
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
+        
+        #Cut the grid data for fast plot.
+        if cut_extent and self.extent is not None:
+            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent)
 
         #make 2D grid coordinates
         if lon.ndim == 1:
@@ -1308,7 +1339,7 @@ class BaseMap():
         return cs
 
     def contourf(self,lon,lat,data,*args,ax=None,transform=None,
-                 sigma=None, **kwargs):
+                 cut_extent=True, sigma=None, **kwargs):
         """
         Wrapper to matplotlib's contourf function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1320,6 +1351,10 @@ class BaseMap():
         
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
+        
+        #Cut the grid data for fast plot.
+        if cut_extent and self.extent is not None:
+            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent)
 
         #make 2D grid coordinates
         if lon.ndim == 1:
@@ -1334,7 +1369,7 @@ class BaseMap():
         cs = ax.contourf(lon,lat,data,*args,transform=transform, **kwargs)
         return cs
     
-    def contour(self,lon,lat,data,*args,ax=None,transform=None,sigma=None,
+    def contour(self,lon,lat,data,*args,ax=None,transform=None,sigma=None, cut_extent=True,
                 label=True, label_size=12, label_fmt=label_fmt, **kwargs):
         """
         Wrapper to matplotlib's contour function. Assumes lat and lon arrays are passed instead
@@ -1347,6 +1382,10 @@ class BaseMap():
         
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
+        
+        #Cut the grid data for fast plot.
+        if cut_extent and self.extent is not None:
+            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent)
 
         #make 2D grid coordinates
         if lon.ndim == 1:
@@ -1364,7 +1403,7 @@ class BaseMap():
                       fmt=label_fmt, fontsize=label_size, rightside_up=True)
         return cs
     
-    def barbs(self,lon,lat,u,v,*args,ax=None,transform=None,**kwargs):
+    def barbs(self,lon,lat,u,v,*args,ax=None,transform=None,cut_extent=True, **kwargs):
         """
         Wrapper to matplotlib's barbs function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1377,12 +1416,15 @@ class BaseMap():
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
         
+        #Cut the grid data for fast plot.
+        if cut_extent and self.extent is not None:
+            u, _, _ = get_sub_grid(u, lon, lat, limit=self.extent)
+            v, lon, lat = get_sub_grid(v, lon, lat, limit=self.extent)
+        
         #Ensure lon and lat arrays are 2D
-        lon_shape = len(np.array(lon).shape)
-        lat_shape = len(np.array(lat).shape)
-        if lon_shape == 1 and lat_shape == 1:
+        if lon.ndim == 1 and lat.ndim == 1:
             lon,lat = np.meshgrid(lon,lat)
-        elif lon_shape == 2 and lat_shape == 2:
+        elif lon.ndim == 2 and lat.ndim == 2:
             pass
         else:
             raise ValueError('Both lon and lat must have the same number of dimensions')
@@ -1401,7 +1443,8 @@ class BaseMap():
         #Return values
         return barb_nh, barb_sh
     
-    def quiver(self,lon,lat,u,v,*args,ax=None,transform=None,**kwargs):
+    def quiver(self,lon,lat,u,v,*args,ax=None,transform=None,
+               cut_extent=True, **kwargs):
         """
         Wrapper to matplotlib's quiver function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1413,6 +1456,19 @@ class BaseMap():
         
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
+        
+        #Cut the grid data for fast plot.
+        if cut_extent and self.extent is not None:
+            u, _, _ = get_sub_grid(u, lon, lat, limit=self.extent)
+            v, lon, lat = get_sub_grid(v, lon, lat, limit=self.extent)
+            
+        #Ensure lon and lat arrays are 2D
+        if lon.ndim == 1 and lat.ndim == 1:
+            lon,lat = np.meshgrid(lon,lat)
+        elif lon.ndim == 2 and lat.ndim == 2:
+            pass
+        else:
+            raise ValueError('Both lon and lat must have the same number of dimensions')
 
         #Plot north hemisphere barbs
         qv = ax.quiver(lon,lat,u,v,*args,**kwargs,transform=transform)

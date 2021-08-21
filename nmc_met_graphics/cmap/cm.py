@@ -282,7 +282,7 @@ def ncl_cmaps(name, N=None):
     return ListedColormap(rgb, name='ncl_'+str(name), N=N)
 
 
-def guide_cmaps(name, N=255):
+def guide_cmaps(name, N=256):
     """
     Get guide color maps.
 
@@ -347,7 +347,7 @@ def crameri_cmaps(name, N=None):
     return ListedColormap(rgb/255, name='crameri_'+str(name), N=N)
 
 
-def ndfd_cmaps(name, N=None):
+def ndfd_cmaps(name, N=256):
     """
     Get ndfd color maps.
     refer to https://github.com/eengl/ndfd-colors.
@@ -363,7 +363,8 @@ def ndfd_cmaps(name, N=None):
         raise ValueError('Improper ndfd colormap name.')
 
     # read color data
-    rgb = gmtColormap_openfile(cmap_file, 'ndfd_'+str(name), N=N)
+    with open(cmap_file) as cptf:
+        rgb = gmtColormap_openfile(cptf, 'ndfd_'+str(name), N=N)
 
     # construct color map
     return rgb
@@ -377,8 +378,8 @@ def ndfd_cmaps_show():
         "nmc_met_graphics", "resources/colormaps_ndfd/")
     
     for file in pathlib.Path(cmap_dir).glob("*.cpt"):
-        cptf = open(file, 'r')
-        color = gmtColormap_openfile(cptf, file.name)
+        with open(file, 'r') as cptf:
+            color = gmtColormap_openfile(cptf, file.name)
         plot_colorMaps(color)
 
 

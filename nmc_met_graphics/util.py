@@ -243,7 +243,14 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
         norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend=extend)
         return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
     
+    elif name == 'ndfd_t_summer':
+        if clevs is None:
+            clevs = np.arange(0, 35, 2)
+        clevs = np.asarray(clevs)
+        cmap = cm.ndfd_cmaps('T_summer')
+        norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend=extend)
+        return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
+    
     else:
         raise ValueError('{} is not supported.'.format(name))
-
 
