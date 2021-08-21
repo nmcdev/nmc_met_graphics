@@ -251,6 +251,23 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
         norm = mpl.colors.BoundaryNorm(clevs, cmap.N, extend=extend)
         return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
     
+    elif name == '2m_temperature':
+        if clevs is None:
+            clevs = [-45, -30, -20, -10,  -5,   0,   0, 
+                     5,   5,  10,  20,  20,  30,  30,  40 , 45]
+        clevs = np.asarray(clevs)
+        r = np.asarray([ 61, 250,  9,   94,  46,   6, 254, 32,   11,   0, 173, 254, 255, 255,  90, 253])
+        g = np.asarray([  2,   0,  0,  157,  94, 249, 254, 178, 244,  97, 255, 254, 140,  99,   3, 253])
+        b = np.asarray([ 57, 252, 121, 248, 127, 251, 254, 170,  11,   3,  47,   0,   0,  61,   3, 253])
+        _colors = np.stack((r,g,b), axis=-1)
+        _colors = np.asarray(_colors)/255.0
+        if min_lev is not None:
+            idx = np.where(clevs >= min_lev)
+            clevs = clevs[idx]
+            _colors = _colors[idx,]
+        cmap, norm = mpl.colors.from_levels_and_colors(clevs, _colors, extend=extend)
+        return {'clevs':clevs, 'cmap':cmap, 'norm':norm}
+    
     else:
         raise ValueError('{} is not supported.'.format(name))
 
