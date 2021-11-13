@@ -8,6 +8,11 @@ Load colormaps from a variety of sources, mainly .cpt though
 
 refer to:
 https://github.com/j08lue/pycpt
+
+examples:
+  > from nmc_met_graphics.cmap.cpt import cmap_from_cptcity_url
+  > cmap_cptcity = cmap_from_cptcity_url('ngdc/ETOPO1.cpt')
+
 """
 
 from __future__ import absolute_import
