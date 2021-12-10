@@ -36,3 +36,4 @@ Using the fellowing command to install packages:
 
 * [Magics](https://anaconda.org/conda-forge/magics), `conda install -c conda-forge magics`
 
+### Change log:
