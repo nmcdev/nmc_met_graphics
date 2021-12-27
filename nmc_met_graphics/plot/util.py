@@ -10,16 +10,21 @@ Utilities for use in making plots.
 import os
 import itertools
 import string
-from datetime import datetime, timedelta
 import pkg_resources
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
-import cartopy.crs as ccrs
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from scipy.ndimage.filters import minimum_filter, maximum_filter
+
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as mpatheffects
 import matplotlib.ticker as mticker
-from scipy.ndimage.filters import minimum_filter, maximum_filter
+from matplotlib import collections
+from matplotlib.lines import Line2D
+import cartopy.crs as ccrs
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+
 
 
 def get_mplstyle(name):
@@ -306,6 +311,76 @@ def figsize(w, portrait=False):
     """
     phi = (1 + np.sqrt(5)) / 2
     return (w, w * phi) if portrait else (w, w / phi)
+
+
+def autosize(fig=None, figsize=None):
+    """
+    It's a thin wrapper around matplotlib that automatically adjusts font sizes,
+    scatter point sizes, line widths, etc. according the figure size.
+    
+    refer to: https://github.com/andrewcharlesjones/plottify
+
+    Args:
+        fig (ojbect, optional): matplotlib figure object. Defaults to current figure.
+        figsize (list, optional): figure size. Defaults is got from current figure.
+    
+    Examples:
+        from plottify import autosize
+        import matplotlib.pyplot as plt
+
+        plt.scatter(x, y)
+        autosize()
+        plt.show()
+        
+        # If you have a matplotlib figure object, you can pass it as an argument to autosize:
+        autosize(fig)
+    """
+
+    ## Take current figure if no figure provided
+    if fig is None:
+        fig = plt.gcf()
+
+    if figsize is None:
+
+        ## Get size of figure
+        figsize = fig.get_size_inches()
+    else:
+
+        ## Set size of figure
+        fig.set_size_inches(figsize)
+
+    ## Make font sizes proportional to figure size
+    fontsize_labels = figsize[0] * 5
+    fontsize_ticks = fontsize_labels / 2
+    scatter_size = (figsize[0] * 1.5) ** 2
+    linewidth = figsize[0]
+    axes = fig.get_axes()
+    for ax in axes:
+
+        ## Set label font sizes
+        for item in [ax.title, ax.xaxis.label, ax.yaxis.label]:
+            item.set_fontsize(fontsize_labels)
+
+        ## Set tick font sizes
+        for item in ax.get_xticklabels() + ax.get_yticklabels():
+            item.set_fontsize(fontsize_ticks)
+
+        ## Set line widths
+        plot_objs = [child for child in ax.get_children() if isinstance(child, Line2D)]
+        for plot_obj in plot_objs:
+            plot_obj.set_linewidth(linewidth)
+
+        ## Set scatter point sizes
+        plot_objs = [
+            child
+            for child in ax.get_children()
+            if isinstance(child, collections.PathCollection)
+        ]
+        for plot_obj in plot_objs:
+            plot_obj.set_sizes([scatter_size])
+
+    ## Set tight layout
+    plt.tight_layout()
 
 
 def get_subplot_arrangement(n):
