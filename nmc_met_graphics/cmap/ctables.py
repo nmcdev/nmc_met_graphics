@@ -499,7 +499,7 @@ def cm_temperature_nws(pos=None):
             -45, -30, -20, -10, -5, 0, 0, 5, 5, 10, 20, 20, 30, 30, 40, 45])
     else:
         _pos = pos
-    return make_cmap(_colors, position=_pos, rgb=True)
+    return make_cmap(_colors, position=_pos, in_rgb=True)
 
 
 def cm_temp():
@@ -589,7 +589,7 @@ def cm_sftemp():
 
      
     sfc_coltbl = mpl.colors.LinearSegmentedColormap('SFC_COLTBL',sfc_cdict)
-    return sfc_coltbl 
+    return sfc_coltbl
 
 
 def cm_temperature_trend_nws(pos=None):
@@ -743,14 +743,14 @@ def cm_wind_speed_nws(pos=None):
     _colors = [
         [255, 255, 255], [99, 99, 99], [28, 99, 207], [177, 238, 239],
         [60, 206, 77], [197, 254, 189], [251, 249, 173], [163, 14, 19],
-        [95, 61, 54], [221, 186, 177], [241, 218, 209], [209, 83, 80]
-    ]
+        [95, 61, 54], [221, 186, 177], [241, 218, 209], [209, 83, 80]]
     if pos is None:
         _pos = np.array(
             [0, 3.6, 3.6, 10.8, 10.8, 17.2, 17.2, 24.5, 24.5, 32.7, 32.7, 42])
     else:
         _pos = pos
-    return make_cmap(_colors, position=_pos, rgb=True)
+        
+    return make_cmap(_colors, position=_pos, in_rgb=True)
 
 
 def cm_wind():
@@ -985,7 +985,7 @@ def cm_rh():
     # Create the colormap
     cmap = mpl.colors.LinearSegmentedColormap.from_list("rh", COLORS)
 
-    return cmap
+    return cmap, norm
 
 
 def cm_cloud_cover_nws(pos=None):
@@ -1002,7 +1002,7 @@ def cm_cloud_cover_nws(pos=None):
     else:
         _pos = pos
 
-    return make_cmap(_colors, position=_pos, hex=True)
+    return make_cmap(_colors, position=_pos, in_hex=True)
 
 
 def cm_sky():
@@ -1194,7 +1194,7 @@ def cm_specific_humidity_nws(pos=None):
     else:
         _pos = [0, 4, 8, 8, 12, 12, 16, 16, 20, 20, 24]
 
-    return make_cmap(_colors, position=_pos, hex=True)
+    return make_cmap(_colors, position=_pos, in_hex=True)
 
 
 def cm_high_temperature_nws(pos=None):
@@ -1216,7 +1216,7 @@ def cm_high_temperature_nws(pos=None):
         _pos = [-60, -50, -40, -35, -30, -25, -20, -15, -10, -5, 0,
                 0, 5, 10, 15, 20, 25, 30, 35, 40]
 
-    return make_cmap(_colors, position=_pos, hex=True)
+    return make_cmap(_colors, position=_pos, in_hex=True)
 
 
 def cm_high_thermal_temperature_nws(pos=None):
@@ -1264,7 +1264,7 @@ def cm_cape_nws(pos=None):
             0, 100, 150, 500, 900, 1300, 1500, 1800,
             2000, 2850, 3600, 3900, 4200, 4950])
     
-    return make_cmap(_colors, position=_pos, hex=True)
+    return make_cmap(_colors, position=_pos, in_hex=True)
 
 
 def cm_terrain_256():

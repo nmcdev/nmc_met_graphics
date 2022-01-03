@@ -23,7 +23,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from nmc_met_graphics.cmap.cpt import gmtColormap_openfile
 
 
-def make_cmap(incolors, position=None, rgb=False, hex=False):
+def make_cmap(incolors, position=None, in_rgb=False, in_hex=False):
     """
     Takes a list of tuples which contain RGB values. The RGB
     values may either be in 8-bit [0 to 255] (in which bit must be set to
@@ -35,8 +35,8 @@ def make_cmap(incolors, position=None, rgb=False, hex=False):
                      colorbar and the last is the highest.
     :param position: contains values from 0 to 1 to dictate the
                      location of each color.
-    :param rgb: incolors are RGB colors
-    :param hex: incolors are HEX colors
+    :param in_rgb: incolors are RGB colors
+    :param in_hex: incolors are HEX colors
     :return: matplotlib color map function.
 
     :Example:
@@ -47,7 +47,7 @@ def make_cmap(incolors, position=None, rgb=False, hex=False):
     ...             '#ED00ED')
     >>> pos = np.array([250,270,280,285,290,295,300,305,
                         310,315,320,330,335,340,345,350,355,360,370])
-    >>> cmap = make_cmap(incolors, position=pos, hex=True)
+    >>> cmap = make_cmap(incolors, position=pos, in_hex=True)
     >>> show_colormap(cmap)
     """
 
@@ -66,11 +66,11 @@ def make_cmap(incolors, position=None, rgb=False, hex=False):
     else:
         positions = position
 
-    if hex:
+    if in_hex:
         for i in range(len(incolors)):
             _colors.append(to_rgb(incolors[i]))
 
-    if rgb:
+    if in_rgb:
         bit_rgb = np.linspace(0, 1, 256)
         for i in range(len(incolors)):
             _colors.append((bit_rgb[incolors[i][0]],
@@ -86,6 +86,64 @@ def make_cmap(incolors, position=None, rgb=False, hex=False):
     cmap = mpl.colors.LinearSegmentedColormap('my_colormap', cdict, 256)
 
     return cmap
+
+
+def shift_cmap(cmap, start=0, midpoint=0.5, stop=1, name='shiftedcmap'):
+    '''Offset the median value of a colormap.
+    https://github.com/fspaolo/altimpy/blob/master/altimpy/viz.py
+    
+    And scale the remaining color range. Useful for data with a negative
+    minimum and positive maximum where you want the middle of the colormap's
+    dynamic range to be at zero.
+    Input
+    -----
+      cmap : The matplotlib colormap to be altered
+      start : Offset from lowest point in the colormap's range.
+          Defaults to 0.0 (no lower ofset). Should be between
+          0.0 and 0.5; if your dataset mean is negative you should leave 
+          this at 0.0, otherwise to (vmax-abs(vmin))/(2*vmax) 
+      midpoint : The new center of the colormap. Defaults to 
+          0.5 (no shift). Should be between 0.0 and 1.0; usually the
+          optimal value is abs(vmin)/(vmax+abs(vmin)) 
+      stop : Offset from highets point in the colormap's range.
+          Defaults to 1.0 (no upper ofset). Should be between
+          0.5 and 1.0; if your dataset mean is positive you should leave 
+          this at 1.0, otherwise to (abs(vmin)-vmax)/(2*abs(vmin)) 
+    Credits
+    -------
+    Paul H (initial version)
+    Horea Christian (additions/modifications)
+    Fernando Paolo (additions/modifications)
+    
+    ----
+    Set 'start' and 'stop' dynamically when negative/positive bounds.
+    '''
+    # if array given, find optimal value to center new cmap
+    if np.ndim(midpoint) != 0:
+        midpoint = np.asarray(midpoint)[~np.isnan(midpoint)]
+        midpoint = abs(midpoint.min()) / float(abs(midpoint.max()) + \
+                                               abs(midpoint.min()))
+    # regular index to compute the colors
+    reg_index = np.hstack([
+        np.linspace(start, 0.5, 128, endpoint=False), 
+        np.linspace(0.5, stop, 129, endpoint=True)
+    ])
+    # shifted index to match the midpoint of the data
+    new_index = np.hstack([
+        np.linspace(0.0, midpoint, 128, endpoint=False), 
+        np.linspace(midpoint, 1.0, 129, endpoint=True)
+    ])
+    cdict = {'red': [], 'green': [], 'blue': [], 'alpha': []}
+    for ri, si in zip(reg_index, new_index):
+        r, g, b, a = cmap(ri)
+        cdict['red'].append((si, r, r))
+        cdict['green'].append((si, g, g))
+        cdict['blue'].append((si, b, b))
+        cdict['alpha'].append((si, a, a))
+    newcmap = mpl.colors.LinearSegmentedColormap(name, cdict, 256)
+    plt.register_cmap(cmap=newcmap)
+    return newcmap
+
 
 
 def discrete_cmap(N, base_cmap=None):
