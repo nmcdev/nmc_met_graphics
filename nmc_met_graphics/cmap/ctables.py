@@ -39,28 +39,36 @@ def cm_precipitation_metpy():
     return mpl.colors.ListedColormap(colors, 'precipitation')
 
 
-def cm_precipitation_nws(atime=24):
+def cm_precipitation_nws(atime=24, pos=None, return_norm=False):
     """
     http://jjhelmus.github.io/blog/2013/09/17/plotting-nsw-precipitation-data/
 
     :param atime: accumulative time period.
     :return: colormap function, normalization boundary.
     """
-
-    if atime == 1:
-        clevs = [0.01, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 100]
-    elif atime == 3:
-        clevs = [0.01, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 100]
-    elif atime == 6:
-        clevs = [0.01, 1, 3, 5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100, 120]
+    
+    if pos is None:
+        if atime == 1:
+            _pos = [0.01, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 100]
+        elif atime == 3:
+            _pos = [0.01, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 100]
+        elif atime == 6:
+            _pos = [0.01, 1, 3, 5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100, 120]
+        else:
+            _pos = [0.1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250]
     else:
-        clevs = [0.1, 2.5, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250]
+        _pos = pos
+        
     colors = ["#04e9e7", "#019ff4", "#0300f4", "#02fd02",
               "#01c501", "#008e00", "#fdf802", "#e5bc00",
               "#fd9500", "#fd0000", "#d40000", "#bc0000",
               "#f800fd", "#dd1c77", "#9854c6"]
-    cmap, norm = mpl.colors.from_levels_and_colors(clevs, colors, extend='max')
-    return cmap, norm
+    
+    if return_norm:
+        cmap, norm = mpl.colors.from_levels_and_colors(_pos, colors, extend='max')
+        return cmap, norm
+    else:
+        return make_cmap(colors, position=_pos, in_hex=True)
 
 
 def cm_rain_nws(atime=24, pos=None):
@@ -733,7 +741,7 @@ def cm_irsat():
     return irsat_coltbl
 
 
-def cm_wind_speed_nws(pos=None):
+def cm_wind_speed_nws(pos=None, return_norm=False):
     """
     Construct 10m wind speed color maps.
 
@@ -750,7 +758,12 @@ def cm_wind_speed_nws(pos=None):
     else:
         _pos = pos
         
-    return make_cmap(_colors, position=_pos, in_rgb=True)
+    if return_norm:
+        _colors = np.array(_colors)/255.0
+        cmap, norm = mpl.colors.from_levels_and_colors(_pos, _colors, extend='max')
+        return cmap, norm
+    else:
+        return make_cmap(_colors, position=_pos, in_rgb=True)
 
 
 def cm_wind():
@@ -931,7 +944,7 @@ def cm_dpt():
     return cmap
 
 
-def cm_relative_humidity_nws(pos=None):
+def cm_relative_humidity_nws(pos=None, return_norm=False):
     """
     Construct 10m relative humidity color maps.
     
@@ -944,16 +957,19 @@ def cm_relative_humidity_nws(pos=None):
         [185, 199, 170], [170, 193, 156], [135, 187, 138], [108, 165, 145],
         [79, 105, 143], [79, 98, 143], [157, 24, 177], [121, 20, 97]
     ]
-    _colors = np.array(_colors)/255.0
     if pos is None:
         _pos = [0, 1, 5, 10, 20, 30, 40, 50, 60, 65, 70, 75, 80, 85, 90, 99]
     else:
         _pos = pos
 
     # construct color map and normalized boundary
-    cmap, norm = mpl.colors.from_levels_and_colors(
-        _pos, _colors, extend='max')
-    return cmap, norm
+    if return_norm:
+        _colors = np.array(_colors)/255.0
+        cmap, norm = mpl.colors.from_levels_and_colors(
+            _pos, _colors, extend='max')
+        return cmap, norm
+    else:
+        return make_cmap(_colors, position=_pos, in_rgb=True)
 
 
 def cm_rh():
