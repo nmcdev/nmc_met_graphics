@@ -131,7 +131,7 @@ def get_map_region(name):
     if name in map_regions:
         return map_regions[name]
     else:
-        print('{} is not a valid region name. Select from {}.'.format(
+        print('{0} is not a valid region name. Select from {1}.'.format(
             name, ','.join(map_regions.keys())))
         return map_regions[1]
 

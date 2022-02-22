@@ -230,7 +230,8 @@ class BaseMap():
         设置地图范围.
 
         Args:
-            region (str, optional): [description]. Defaults to '中国陆地'.
+            region (str or list, optional): Map region name or limit. Defaults to '中国陆地'.
+                                            if list, [lonmin, lonmax, latmin, latmax]
         """
 
         #Get current axes if not specified
@@ -486,6 +487,7 @@ class BaseMap():
             self.drawcounties(linewidths=0.4*linewidths, color='gray')
             self.drawrivers(linewidths=1.0*linewidths, color="blue")
             self.ax.spines['geo'].set_linewidth(4*linewidths)
+            
         else:
             print('The {} style is not supported.'.format(style))
 
