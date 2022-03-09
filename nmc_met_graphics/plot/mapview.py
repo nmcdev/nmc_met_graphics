@@ -741,8 +741,14 @@ class BaseMap():
         # Draw the path of interest
         clip = Path(vertices, codes)
         clip = PathPatch(clip, transform=ccrs.PlateCarree()._as_mpl_transform(ax), clip_on=True)
-        for contour in conf.collections:
-            contour.set_clip_path(clip)
+
+        #modified by ZhuWJ 判断是否是contour对象，如果是就调用collections，如果不是，就直接set_clip_path
+        if hasattr(conf,'collections'):
+            for contour in conf.collections:
+                contour.set_clip_path(clip)
+        else:
+            conf.set_clip_path(clip)
+
         return clip
 
     def gridlines(self, ax=None, draw_labels=True, font_size=16, linewidth=1,
