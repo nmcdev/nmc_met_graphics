@@ -211,8 +211,8 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
             clevs = [0.1, 10, 25, 50, 100, 250, 400, 600, 800, 1000]
         clevs = np.asarray(clevs)
         _colors = [[161, 241, 141], [61, 186, 61], [96,  184, 255], [0,   0,   255],
-                  [250, 0,   250], [128, 0,   64], [255, 170, 0], [255, 102, 0],
-                  [230, 0,   0], [80,  45,  10]]
+                   [250, 0,   250], [128, 0,   64], [255, 170, 0], [255, 102, 0],
+                   [230, 0,   0], [80,  45,  10]]
         _colors = np.asarray(_colors)/255.0
         if min_lev is not None:
             idx = np.where(clevs >= min_lev)

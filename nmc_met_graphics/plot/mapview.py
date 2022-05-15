@@ -8,6 +8,7 @@
 """
 
 import os
+import re
 import pkg_resources
 from datetime import datetime, timedelta
 import numpy as np
@@ -104,10 +105,8 @@ def label_fmt(x):
     This custom formatter removes trailing zeros, e.g. "1.0" becomes "1", and
     then adds a percent sign.
     """
-    s = f"{x:.1f}"
-    if s.endswith("0"):
-        s = f"{x:.0f}"
-    return rf"{s}" if plt.rcParams["text.usetex"] else f"{s}"
+    tail_dot_rgx = re.compile(r'(?:(\.)|(\.\d*?[1-9]\d*?))0+(?=\b|[^0-9])')
+    return tail_dot_rgx.sub(r'\2',str(x))
 
 
 class BaseMap():
@@ -753,12 +752,16 @@ class BaseMap():
 
     def gridlines(self, ax=None, draw_labels=True, font_size=16, linewidth=1,
                   color='gray', alpha=0.5, linestyle='--', dms=True,
-                  x_inline=False, y_inline=False, **kwargs):
+                  x_inline=False, y_inline=False, rotate_labels=False,
+                  top_labels=False, right_labels=False, **kwargs):
         """
         绘制经纬度线.
 
         Args:
             ax (object, optional): Axes instance, if not None then overrides the default axes instance.
+            dms (book, optional): When default longitude and latitude locators and formatters are used, 
+                                  ticks are able to stop on minutes and seconds if minutes is set to True,
+                                  and not fraction of degrees. 
         """
 
         #Get current axes if not specified
@@ -767,8 +770,10 @@ class BaseMap():
         #Add grid lines
         gl = ax.gridlines(draw_labels=draw_labels, linewidth=linewidth,
                           color=color, alpha=alpha, linestyle=linestyle, 
-                          dms=dms, x_inline=x_inline, y_inline=y_inline, **kwargs)
-        gl.top_labels = gl.right_labels = False
+                          dms=dms, x_inline=x_inline, y_inline=y_inline,
+                          rotate_labels=rotate_labels, **kwargs)
+        gl.top_labels = top_labels
+        gl.right_labels = right_labels
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
         gl.xlabel_style = {'size': font_size}
@@ -1168,6 +1173,11 @@ class BaseMap():
 
         #Create dataframe
         data = pd.DataFrame({'lon':lon,'lat':lat,'values':values})
+        
+        #Data type transform
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        values = np.asarray(values)
 
         #Check graphic parameters
         nlevs = len(clevs)
@@ -1285,18 +1295,24 @@ class BaseMap():
         for l in cb.ax.yaxis.get_ticklabels():
             l.set_weight("bold")
             l.set_fontsize(label_size)
-        cb.ax.set_yticklabels([label_fmt(i) for i in cb.get_ticks()])
+        try:
+            cb.ax.set_yticklabels([label_fmt(i) for i in cb.get_ticks()])
+        except:
+            pass
         
         #Reset parent axis as the current axis
         fig.sca(ax)
         return cb
 
     def pcolormesh(self,lon,lat,data,*args,ax=None,transform=None,
-                   cut_extent=True, sigma=None, **kwargs):
+                   cut_extent=True, sigma=None, pad=0, **kwargs):
         """
         Wrapper to matplotlib's pcolormesh function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
         data projection is passed.
+        
+        :param pad: pad for extent cut.
+        
         Note: if you want to mask some values, the colormap is not work and set to np.nan will work.
         """
 
@@ -1306,9 +1322,14 @@ class BaseMap():
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
         
+        #Data type transform
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        data = np.asarray(data)
+        
         #Cut the grid data for fast plot.
         if cut_extent and self.extent is not None:
-            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent)
+            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent, pad=pad)
 
         #make 2D grid coordinates
         if lon.ndim == 1:
@@ -1336,6 +1357,11 @@ class BaseMap():
         
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
+        
+        #Data type transform
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        data = np.asarray(data)
 
         #smooth the 2D filed if sigma set.
         data = np.squeeze(data)
@@ -1347,7 +1373,7 @@ class BaseMap():
         return cs
 
     def contourf(self,lon,lat,data,*args,ax=None,transform=None,
-                 cut_extent=True, sigma=None, **kwargs):
+                 cut_extent=True, pad=0, sigma=None, **kwargs):
         """
         Wrapper to matplotlib's contourf function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1360,9 +1386,14 @@ class BaseMap():
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
         
+        #Data type transform
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        data = np.asarray(data)
+        
         #Cut the grid data for fast plot.
         if cut_extent and self.extent is not None:
-            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent)
+            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent,pad=pad)
 
         #make 2D grid coordinates
         if lon.ndim == 1:
@@ -1377,7 +1408,7 @@ class BaseMap():
         cs = ax.contourf(lon,lat,data,*args,transform=transform, **kwargs)
         return cs
     
-    def contour(self,lon,lat,data,*args,ax=None,transform=None,sigma=None, cut_extent=True,
+    def contour(self,lon,lat,data,*args,ax=None,transform=None,sigma=None, cut_extent=True, pad=0,
                 label=True, label_size=12, label_fmt=label_fmt, **kwargs):
         """
         Wrapper to matplotlib's contour function. Assumes lat and lon arrays are passed instead
@@ -1391,9 +1422,14 @@ class BaseMap():
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
         
+        #Data type transform
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        data = np.asarray(data)
+        
         #Cut the grid data for fast plot.
         if cut_extent and self.extent is not None:
-            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent)
+            data, lon, lat = get_sub_grid(data, lon, lat, limit=self.extent, pad=pad)
 
         #make 2D grid coordinates
         if lon.ndim == 1:
@@ -1411,7 +1447,7 @@ class BaseMap():
                       fmt=label_fmt, fontsize=label_size, rightside_up=True)
         return cs
     
-    def barbs(self,lon,lat,u,v,*args,ax=None,transform=None,cut_extent=True, **kwargs):
+    def barbs(self,lon,lat,u,v,*args,ax=None,transform=None,cut_extent=True, pad=0, **kwargs):
         """
         Wrapper to matplotlib's barbs function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1424,10 +1460,16 @@ class BaseMap():
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
         
+        #Data type transform
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        u = np.asarray(u)
+        v = np.asarray(v)
+        
         #Cut the grid data for fast plot.
         if cut_extent and self.extent is not None:
-            u, _, _ = get_sub_grid(u, lon, lat, limit=self.extent)
-            v, lon, lat = get_sub_grid(v, lon, lat, limit=self.extent)
+            u, _, _ = get_sub_grid(u, lon, lat, limit=self.extent, pad=pad)
+            v, lon, lat = get_sub_grid(v, lon, lat, limit=self.extent, pad=pad)
         
         #Ensure lon and lat arrays are 2D
         if lon.ndim == 1 and lat.ndim == 1:
@@ -1452,7 +1494,7 @@ class BaseMap():
         return barb_nh, barb_sh
     
     def quiver(self,lon,lat,u,v,*args,ax=None,transform=None,
-               cut_extent=True, **kwargs):
+               cut_extent=True, pad=0, **kwargs):
         """
         Wrapper to matplotlib's quiver function. Assumes lat and lon arrays are passed instead
         of x and y arrays. Default data projection is ccrs.PlateCarree() unless a different
@@ -1465,10 +1507,16 @@ class BaseMap():
         #Check transform if not specified
         if transform is None: transform = ccrs.PlateCarree()
         
+        #Data type transform
+        lon = np.asarray(lon)
+        lat = np.asarray(lat)
+        u = np.asarray(u)
+        v = np.asarray(v)
+        
         #Cut the grid data for fast plot.
         if cut_extent and self.extent is not None:
-            u, _, _ = get_sub_grid(u, lon, lat, limit=self.extent)
-            v, lon, lat = get_sub_grid(v, lon, lat, limit=self.extent)
+            u, _, _ = get_sub_grid(u, lon, lat, limit=self.extent, pad=pad)
+            v, lon, lat = get_sub_grid(v, lon, lat, limit=self.extent, pad=pad)
             
         #Ensure lon and lat arrays are 2D
         if lon.ndim == 1 and lat.ndim == 1:

@@ -529,7 +529,7 @@ class Cmaps(object):
         return self._cmap_d
 
 
-class gradient:
+class cm_gradient:
     """
     Creates a color gradient based on passed ranges of values
     refer to:
