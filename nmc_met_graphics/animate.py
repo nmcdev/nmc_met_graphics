@@ -1,15 +1,10 @@
-## Brian Blaylock
-## January 27, 2020
+# _*_ coding: utf-8 _*_
+
+# Copyright (c) 2022 NMC Developers.
+# Distributed under the terms of the GPL V3 License.
 
 """
-===============
-Image Animation
-===============
-
-Functions to animate images
-
-    - as_gif
-
+Create animate image.
 """
 
 import imageio
