@@ -1,8 +1,0 @@
-include README.md
-include LICENSE
-recursive-include nmc_met_graphics/resources *
-recursive-exclude * __pycache__
-recursive-exclude * *.pyc
-recursive-exclude * *.pyo
-recursive-exclude * *.orig
-
