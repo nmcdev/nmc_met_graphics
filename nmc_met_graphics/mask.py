@@ -256,3 +256,34 @@ def grid_mask_china(lon, lat):
     # return mask grid
     return shp_mask(polygons, lon, lat)
 
+
+def land_mask_with_rasterized_map(lons, lats):
+    """
+    该程序用于生成陆地的mask网格, 速度比较快, 但精度并不高.
+    https://stackoverflow.com/a/73763018/6361813
+
+    Args:
+        lon (np.array): grid longitude coordinates.
+        lat (np.array): grid latitude coordinates.
+    """
+    import cartopy
+    import matplotlib.pyplot as plt
+    
+    # prepare temporary plot and create mask from rasterized map
+    proj = {'projection': cartopy.crs.PlateCarree()}
+    fig, ax = plt.subplots(figsize=(len(lons)/100, len(lats)/100), dpi=100, subplot_kw=proj)
+    fig.subplots_adjust(left=0.0, bottom=0.0, right=1.0, top=1.0)
+    ax.set_frame_on(False)
+    
+    ax.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'land', '10m'),  facecolor='black')
+    ax.set_extent([min(lons),max(lons),min(lats),max(lats)], crs=cartopy.crs.PlateCarree())
+    fig.canvas.draw()
+    mask = fig.canvas.tostring_rgb()
+    ncols, nrows = fig.canvas.get_width_height()
+    plt.close(fig)
+    
+    mask = np.frombuffer(mask, dtype=np.uint8).reshape(nrows, ncols, 3)
+    mask = mask.mean(axis=2)
+    mask[mask > 0] = 1
+    return mask
+
