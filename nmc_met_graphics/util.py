@@ -275,6 +275,7 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
 def htb(data):
     """
     Applies the head/tail breaks algorithm to an array of data.
+    https://github.com/chad-m/head_tail_breaks_algorithm/blob/master/htb.py
 
     Params
     ------
