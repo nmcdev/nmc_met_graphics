@@ -271,3 +271,43 @@ def get_plot_attrs(name, clevs=None, min_lev=None, extend='max'):
     else:
         raise ValueError('{} is not supported.'.format(name))
 
+
+def htb(data):
+    """
+    Applies the head/tail breaks algorithm to an array of data.
+
+    Params
+    ------
+    data : list
+        Array of data to apply ht-breaks
+
+    Returns
+    -------
+    results : list 
+        List of data representing break points
+    """
+    # test input
+    assert data, "Input must not be empty."
+    assert all(isinstance(datum, int) or isinstance(datum, float) for datum in data), "All input values must be numeric."
+
+    results = []  # array of break points
+
+    def htb_inner(data):
+        """
+        Inner ht breaks function for recursively computing the break points.
+        """
+        # Add mean to results
+        data_length = float(len(data))
+        data_mean = sum(data) / data_length
+        results.append(data_mean)
+
+        # Recursive call to get next break point
+        head = [datum for datum in data if datum > data_mean]
+        while len(head) > 1 and len(head) / data_length < 0.40:
+            return htb_inner(head)
+
+    htb_inner(data)
+
+    return results
+
+    
