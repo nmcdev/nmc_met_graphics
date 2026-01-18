@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-from scipy.ndimage.filters import minimum_filter, maximum_filter
+from scipy.ndimage import minimum_filter, maximum_filter
 
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as mpatheffects
@@ -635,7 +635,7 @@ def plot_maxmin_points(ax, lon, lat, data, extrema, nsize, symbol, color='k',
                 transform=transform)
         if plotValue:
             ax.text(lon[mxx[i], mxy[i]], lat[mxx[i], mxy[i]],
-                    '\n' + str(np.int(data[mxx[i], mxy[i]])),
+                    '\n' + str(int(data[mxx[i], mxy[i]])),
                     color=color, size=12, clip_on=True, fontweight='bold',
                     horizontalalignment='center', verticalalignment='top', transform=transform)
         ax.plot(lon[mxx[i], mxy[i]], lat[mxx[i], mxy[i]], marker='o', markeredgecolor='black',

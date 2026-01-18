@@ -38,13 +38,15 @@ setup(
       'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
       'Topic :: Scientific/Engineering',
       'Topic :: Scientific/Engineering :: Atmospheric Science',
-      'Programming Language :: Python :: 3.7',
-      'Programming Language :: Python :: 3.8',
+      'Programming Language :: Python :: 3.9',
+      'Programming Language :: Python :: 3.10',
+      'Programming Language :: Python :: 3.11',
+      'Programming Language :: Python :: 3.12',
       'Operating System :: POSIX :: Linux',
       'Operating System :: MacOS :: MacOS X',
       'Operating System :: Microsoft :: Windows'],
-    
-    python_requires='>=3.6',
+
+    python_requires='>=3.9',
     zip_safe = False,
     platforms = ["all"],
 
@@ -55,17 +57,17 @@ setup(
     exclude_package_data={'': ['.gitignore']},
 
     install_requires=[
-      'numpy>=1.17.0',
-      'scipy>=1.4.0',
-      'pandas>=1.0.0',
-      'xarray>=0.16.0',
-      'matplotlib>=2.2.5',
-      'Cartopy>=0.17.0',
-      'metpy>=0.12.0',
-      'netCDF4>=1.5.3',
-      'pyshp>=2.1.0',
-      'Shapely>=1.7.0',
-      'Pillow>=7.0.0',
+      'numpy>=1.24.0',
+      'scipy>=1.10.0',
+      'pandas>=2.0.0',
+      'xarray>=2023.1.0',
+      'matplotlib>=3.7.0',
+      'Cartopy>=0.21.0',
+      'metpy>=1.5.0',
+      'netCDF4>=1.6.0',
+      'pyshp>=2.3.0',
+      'Shapely>=2.0.0',
+      'Pillow>=10.0.0',
       'nmc-met-io>=0.1.0',
       'nmc-met-base>=0.1.0']
 )

@@ -1433,9 +1433,9 @@ def cm_obimp(display_cmap=False):
     display_cmap : bool
         Show the only the colorbar.
     """
-    top = mpl.cm.get_cmap("Greens_r")
+    top = mpl.colormaps["Greens_r"]
     middle = mcolors.to_rgba("#fffcf2")
-    bottom = mpl.cm.get_cmap("RdPu")
+    bottom = mpl.colormaps["RdPu"]
 
     newcolors = np.vstack(
         (

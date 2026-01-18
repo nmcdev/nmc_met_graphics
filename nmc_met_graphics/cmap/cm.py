@@ -16,7 +16,6 @@ import pkg_resources
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.cm as mplcm
 import matplotlib.colorbar as mcbar
 from matplotlib.colors import ListedColormap, to_rgb, to_hex, LinearSegmentedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -141,14 +140,14 @@ def shift_cmap(cmap, start=0, midpoint=0.5, stop=1, name='shiftedcmap'):
         cdict['blue'].append((si, b, b))
         cdict['alpha'].append((si, a, a))
     newcmap = mpl.colors.LinearSegmentedColormap(name, cdict, 256)
-    plt.register_cmap(cmap=newcmap)
+    mpl.colormaps.register(newcmap)
     return newcmap
 
 
 
 def discrete_cmap(N, base_cmap=None):
     """Create an N-bin discrete colormap from the specified input map
-    
+
     Examples:
         N = 5
         x = np.random.randn(40)
@@ -163,10 +162,10 @@ def discrete_cmap(N, base_cmap=None):
     """
 
     # Note that if base_cmap is a string or None, you can simply do
-    #    return plt.cm.get_cmap(base_cmap, N)
+    #    return mpl.colormaps[base_cmap].resampled(N)
     # The following works for string, None, or a colormap instance:
 
-    base = plt.cm.get_cmap(base_cmap)
+    base = mpl.colormaps[base_cmap] if isinstance(base_cmap, str) else base_cmap
     color_list = base(np.linspace(0, 1, N))
     cmap_name = base.name + str(N)
     return base.from_list(cmap_name, color_list, N)
@@ -248,7 +247,7 @@ def colors2cmap(*args, name=None):
 
     cmap_data = [_to_hex(c) for c in args]
     cmap = LinearSegmentedColormap.from_list(name, cmap_data)
-    plt.register_cmap(name, cmap)
+    mpl.colormaps.register(cmap)
 
     return cmap
 
@@ -512,13 +511,13 @@ class Cmaps(object):
                 cname = cname.replace('-', '_')
 
             cmap = mpl.colors.ListedColormap(self._coltbl(cmap_file), name=cname)
-            mplcm.register_cmap(name=cname, cmap=cmap)
+            mpl.colormaps.register(cmap)
             self._cmap_d[cname] = cmap
 
             cname = cname + '_r'
             cmap = mpl.colors.ListedColormap(self._coltbl(cmap_file)[::-1],
                                          name=cname)
-            mplcm.register_cmap(name=cname, cmap=cmap)
+            mpl.colormaps.register(cmap)
             self._cmap_d[cname] = cmap
 
     def listcmname(self):
@@ -974,7 +973,10 @@ def take_cmap_colors(cmap, N, *, cmap_range=(0, 1), return_fmt='float'):
     return_fmt = return_fmt.lower()
 
     # Obtain the colormap
-    cmap = mplcm.get_cmap(cmap)
+    if isinstance(cmap, str):
+        cmap = mpl.colormaps[cmap]
+    elif not hasattr(cmap, 'N'):
+        cmap = mpl.colormaps[cmap]
 
     # Check if provided cmap_range is valid
     if not ((0 <= cmap_range[0] <= 1) and (0 <= cmap_range[1] <= 1)):
@@ -1067,7 +1069,10 @@ def get_sub_cmap(cmap, start, stop, *, N=None):
     """
 
     # Obtain the colormap
-    cmap = mplcm.get_cmap(cmap)
+    if isinstance(cmap, str):
+        cmap = mpl.colormaps[cmap]
+    elif not hasattr(cmap, 'N'):
+        cmap = mpl.colormaps[cmap]
 
     # Check value of N to determine suffix for the name
     suffix = '_sub' if N is None else '_qual'

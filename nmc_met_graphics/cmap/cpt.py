@@ -29,6 +29,7 @@ import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from matplotlib.colorbar import ColorbarBase
+import matplotlib as mpl
 
 
 def cmap_xmap(function, cmap, name=None):
@@ -169,12 +170,12 @@ def register_cptcity_cmaps(cptcitycmaps, urlkw={}, cmapnamekw={}):
 
     Retrieve the cmap using,
 
-        plt.cm.get_cmap('ncl_cosam')
+        mpl.colormaps['ncl_cosam']
 
     """
     def _register_with_reverse(cmap):
-        plt.cm.register_cmap(cmap=cmap)
-        plt.cm.register_cmap(cmap=reverse_cmap(cmap))
+        mpl.colormaps.register(cmap)
+        mpl.colormaps.register(reverse_cmap(cmap))
 
     def _try_reading_methods(cmapfile, cmapname=None):
         try:
@@ -440,7 +441,7 @@ def show_matplotlib_colormaps():
     """
     Plot a list of all colormaps distributed with matplotlib
     """
-    cmaps = [m for m in plt.cm.datad if not m.endswith('_r')]
+    cmaps = [m for m in mpl.colormaps if not m.endswith('_r')]
     cmaps.sort()
     return plot_colormaps(cmaps)
 

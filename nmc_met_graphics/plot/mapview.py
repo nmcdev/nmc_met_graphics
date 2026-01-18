@@ -12,8 +12,6 @@ import re
 import pkg_resources
 from datetime import datetime, timedelta
 import numpy as np
-from numpy.lib.arraysetops import isin
-from numpy.core.fromnumeric import ndim
 import scipy.ndimage as ndimage
 import pandas as pd
 import xarray as xr
